@@ -1,0 +1,115 @@
+Apache Cassandra Python Driver
+Copyright 2013 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+This product originates, before git sha
+5d4fd2349119a3237ad351a96e7f2b3317159305, from software from DataStax and other
+individual contributors. All work was previously copyrighted to DataStax.
+
+Non-DataStax contributors are listed below. Those marked with asterisk have
+explicitly consented to their contributions being donated to the ASF.
+
+a-detiste	Alexandre Detiste                                       *
+a-lst	Andrey Istochkin                                            *
+aboudreault	Alan Boudreault	alan@alanb.ca
+advance512	Alon Diamant	diamant.alon@gmail.com                  *
+alanjds	Alan Justino da Silva	alan.justino@yahoo.com.br           *
+alistair-broomhead	Alistair Broomhead                              *
+amygdalama	Amy Hanlon                                              *
+andy-slac	Andy Salnikov                                           *
+andy8zhao	Andy Zhao
+anthony-cervantes	Anthony Cervantes	anthony@cervantes.io        *
+BackEndTea	Gert de Pagter                                          *
+barvinograd	Bar Vinograd
+bbirand	Berk Birand
+bergundy	Roey Berman	roey.berman@gmail.com                       *
+bohdantan                                                           *
+codesnik	Alexey Trofimenko	aronaxis@gmail.com                  *
+coldeasy	coldeasy
+DanieleSalatti	Daniele Salatti	me@danielesalatti.com               *
+daniloarodrigues	Danilo de Araújo Rodrigues                      *
+daubman	Aaron Daubman	github@ajd.us                               *
+dcosson	Danny Cosson	dcosson@gmail.com                           *
+detzgk	Eli Green	eli@zigr.org                                    *
+devdazed	Russ Bradberry                                          *
+dizpers	Dmitry Belaventsev	dizpers@gmail.com
+dkropachev	Dmitry Kropachev	dmitry.kropachev@gmail.com          *
+dmglab	Daniel	dmg.lab@outlook.com
+dokai	Kai Lautaportti                                             *
+eamanu	Emmanuel Arias	eamanu@yaerobi.com
+figpope	Andrew FigPope	andrew.figpope@gmail.com                    *
+flupke	Luper Rouch                                                 *
+frensjan	Frens Jan Rumph                                         *
+frew	Fred Wulff	frew@cs.stanford.edu                            *
+gdoermann	Greg Doermann
+haaawk	Piotr Jastrzębski
+ikapl	Irina Kaplounova
+ittus	Thang Minh Vu                                               *
+JeremyOT	Jeremy Olmsted-Thompson                                 *
+jeremyschlatter	Jeremy Schlatter                                    *
+jpuerta	Ernesto Puerta                                              *
+julien-duponchelle	Julien Duponchelle	julien@duponchelle.info     *
+justinsb	Justin Santa Barbara	justinsb@google.com             *
+Kami	Tomaz Muraus	tomaz@tomaz.me
+kandul	Michał Kandulski	michal.kandulski@gmail.com
+kdeldycke	Kevin Deldycke                                          *
+kishkaru	Kishan Karunaratne	kishan@karu.io                      *
+kracekumar	Kracekumar	kracethekingmaker@gmail.com
+lenards	Andrew Lenards	andrew.lenards@gmail.com                    *
+lenolib
+Lifto	Ellis Low
+Lorak-mmk	Karol Baryła	git@baryla.org                          *
+lukaselmer	Lukas Elmer	lukas.elmer@gmail.com                       *
+mahall	Michael Hall
+markflorisson	Mark Florisson                                      *
+mattrobenolt	Matt Robenolt	m@robenolt.com                      *
+mattstibbs	Matt Stibbs                                             *
+Mhs-220	Mo Shahmohammadi	hos1377@gmail.com                       *
+mikeokner	Mike Okner                                              *
+Mishail	Mikhail Stepura	mstepura@apple.com                          *
+mission-liao	mission.liao	missionaryliao@gmail.com            *
+mkocikowski	Mik Kocikowski
+Mokto	Théo Mathieu                                                *
+mrk-its	Mariusz Kryński                                             *
+multani	Jonathan Ballet	jon@multani.info                            *
+niklaskorz	Niklas Korz                                             *
+nisanharamati	nisanharamati
+nschrader	Nick Schrader	nick.schrader@mailbox.org               *
+Orenef11	Oren Efraimov                                           *
+oz123	Oz Tiram                                                    *
+pistolero	Sergii Kyryllov                                         *
+pmcnett	Paul McNett	p@ulmcnett.com                                  *
+psarna	Piotr Sarna                                                 *
+r4fek	Rafał Furmański                                             *
+raopm
+rbranson	Rick Branson                                            *
+rqx	Roman Khanenko                                                  *
+rtb-zla-karma	xyz                                                 *
+sigmunau
+silviot	Silvio Tomatis
+sontek	John Anderson	sontek@gmail.com                            *
+stanhu	Stan Hu
+stefanor	Stefano Rivera	stefanor@debian.org                     *
+strixcuriosus	Ash Hoover	strixcuriosus@gmail.com
+tarzanjw	Học Đỗ	hoc3010@gmail.com
+tbarbugli	Tommaso Barbugli
+tchaikov	Kefu Chai	tchaikov@gmail.com                          *
+tglines	Travis Glines
+thoslin	Tom Lin
+tigrus	Nikolay Fominykh	nikolayfn@gmail.com
+timgates42	Tim Gates
+timsavage	Tim Savage                                              *
+tirkarthi	Karthikeyan Singaravelan	tir.karthi@gmail.com        *
+Trundle	Andreas Stührk	andy@hammerhartes.de
+ubombi	Vitalii Kozlovskyi	vitalii@kozlovskyi.dev                  *
+ultrabug	Ultrabug                                                *
+vetal4444	Shevchenko Vitaliy                                      *
+victorpoluceno	Victor Godoy Poluceno	victorpoluceno@gmail.com
+weisslj	Johannes Weißl                                              *
+wenheping	wenheping	wenheping2000@hotmail.com
+yi719
+yinyin	Yinyin                                                      *
+yriveiro	Yago Riveiro                                            *

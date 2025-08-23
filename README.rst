@@ -7,8 +7,8 @@
 
 |license| |version| |pyversion|
 
-DataStax Driver for Apache Cassandra
-====================================
+Apache Cassandra Python Driver
+==============================
 
 .. image:: https://travis-ci.com/datastax/python-driver.png?branch=master
    :target: https://travis-ci.com/github/datastax/python-driver
@@ -85,7 +85,7 @@ and the `DataStax Community <https://community.datastax.com>`_.
 
 License
 -------
-Copyright DataStax, Inc.
+Copyright 2013 The Apache Software Foundation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
