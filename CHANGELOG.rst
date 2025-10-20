@@ -1,3 +1,27 @@
+3.29.3
+======
+October 20, 2025
+
+Features
+--------
+* Upgraded cython to 3.0.x (PR 1221 & PYTHON-1390)
+* Add support for DSE 6.9.x and HCD releases to CI (PYTHON-1402)
+* Add execute_concurrent_async and expose execute_concurrent_* in Session (PR 1229)
+
+Bug Fixes
+---------
+* Update geomet to align with requirements.txt (PR 1236)
+* Connection failure to SNI endpoint when first host is unavailable (PYTHON-1419)
+* Maintain compatibility with CPython 3.13 (PR 1242)
+
+Others
+------
+* Remove duplicated condition in primary key check (PR 1240)
+* Remove Python 3.8 which reached EOL on Oct 2024, update cryptography lib to 42 (PR 1247)
+* Remove obsolete urllib2 from ez_setup.py (PR 1248)
+* Remove stale dependency on sure (PR 1227)
+* Removed 2.7 Cpython defines (PR 1252)
+
 3.29.2
 ======
 September 9, 2024
