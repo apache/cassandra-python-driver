@@ -44,10 +44,10 @@ SERVER_KEYSTORE_PATH = os.path.abspath("tests/integration/long/ssl/127.0.0.1.key
 SERVER_TRUSTSTORE_PATH = os.path.abspath("tests/integration/long/ssl/cassandra.truststore")
 
 # Client specific keys/certs
-CLIENT_CA_CERTS = os.path.abspath("tests/integration/long/ssl/rootCa.crt")
+CLIENT_CA_CERTS = os.path.abspath("tests/integration/long/ssl/ca-cert")
 DRIVER_KEYFILE = os.path.abspath("tests/integration/long/ssl/client.key")
 DRIVER_KEYFILE_ENCRYPTED = os.path.abspath("tests/integration/long/ssl/client_encrypted.key")
-DRIVER_CERTFILE = os.path.abspath("tests/integration/long/ssl/client.crt_signed")
+DRIVER_CERTFILE = os.path.abspath("tests/integration/long/ssl/client.crt")
 DRIVER_CERTFILE_BAD = os.path.abspath("tests/integration/long/ssl/client_bad.key")
 
 USES_PYOPENSSL = "twisted" in EVENT_LOOP_MANAGER or "eventlet" in EVENT_LOOP_MANAGER
@@ -488,7 +488,7 @@ class SSLConnectionWithSSLContextTests(unittest.TestCase):
                 password="cassandra",
             )
             ssl_context.verify_mode = ssl.CERT_REQUIRED
-            ssl_options["check_hostname"] = True
+            ssl_context.check_hostname = True
         with self.assertRaises(Exception):
             validate_ssl_options(ssl_context=ssl_context, ssl_options=ssl_options, hostname="localhost")
 
