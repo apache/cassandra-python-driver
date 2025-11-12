@@ -32,6 +32,8 @@ class TestQueryUpdateModel(Model):
     text_set = columns.Set(columns.Text, required=False)
     text_list = columns.List(columns.Text, required=False)
     text_map = columns.Map(columns.Text, columns.Text, required=False)
+    bin_map = columns.Map(columns.BigInt, columns.Bytes, required=False, default={})
+
 
 class BaseCassEngTestCase(unittest.TestCase):
 

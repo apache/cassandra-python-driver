@@ -823,7 +823,9 @@ class UpdateStatement(AssignmentStatement):
             self.context_counter += conditional.get_context_size()
 
     def add_update(self, column, value, operation=None, previous=None):
-        value = column.to_database(value)
+        # For remove all values are None, no need to convert them
+        if operation != 'remove':
+            value = column.to_database(value)
         col_type = type(column)
         container_update_type = ContainerUpdateClause.type_map.get(col_type)
         if container_update_type:
