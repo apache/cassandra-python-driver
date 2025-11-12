@@ -18,7 +18,7 @@ import unittest
 
 import os, sys, traceback, logging, ssl, time, math, uuid
 from cassandra.cluster import NoHostAvailable
-from cassandra.connection import DefaultEndPoint
+from cassandra.endpoint import DefaultEndPoint
 from cassandra import ConsistencyLevel
 from cassandra.query import SimpleStatement
 

@@ -21,7 +21,7 @@ from cassandra.marshal import uint8_pack, uint32_pack
 from cassandra.protocol import (
     write_stringmultimap, write_int, write_string, SupportedMessage, ReadyMessage, ServerError
 )
-from cassandra.connection import DefaultEndPoint
+from cassandra.endpoint import DefaultEndPoint
 from tests import is_monkey_patched
 
 import io

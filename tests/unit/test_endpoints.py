@@ -10,7 +10,7 @@ import unittest
 
 import itertools
 
-from cassandra.connection import DefaultEndPoint, SniEndPoint, SniEndPointFactory
+from cassandra.endpoint import DefaultEndPoint, SniEndPoint, SniEndPointFactory
 
 from unittest.mock import patch
 

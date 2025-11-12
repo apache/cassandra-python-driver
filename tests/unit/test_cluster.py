@@ -25,7 +25,7 @@ from cassandra import ConsistencyLevel, DriverException, Timeout, Unavailable, R
     InvalidRequest, Unauthorized, AuthenticationFailed, OperationTimedOut, UnsupportedOperation, RequestValidationException, ConfigurationException, ProtocolVersion
 from cassandra.cluster import _Scheduler, Session, Cluster, default_lbp_factory, \
     ExecutionProfile, _ConfigMode, EXEC_PROFILE_DEFAULT
-from cassandra.connection import SniEndPoint, SniEndPointFactory
+from cassandra.endpoint import SniEndPoint, SniEndPointFactory
 from cassandra.pool import Host
 from cassandra.policies import HostDistance, RetryPolicy, RoundRobinPolicy, DowngradingConsistencyRetryPolicy, SimpleConvictionPolicy
 from cassandra.query import SimpleStatement, named_tuple_factory, tuple_factory

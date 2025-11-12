@@ -18,7 +18,7 @@ import subprocess
 import logging
 
 from cassandra.cluster import ExecutionProfile, EXEC_PROFILE_DEFAULT
-from cassandra.connection import UnixSocketEndPoint
+from cassandra.endpoint import UnixSocketEndPoint
 from cassandra.policies import WhiteListRoundRobinPolicy, RoundRobinPolicy
 
 from tests import notwindows

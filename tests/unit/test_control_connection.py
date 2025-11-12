@@ -23,7 +23,7 @@ from cassandra import OperationTimedOut, SchemaTargetType, SchemaChangeType
 from cassandra.protocol import ResultMessage, RESULT_KIND_ROWS
 from cassandra.cluster import ControlConnection, _Scheduler, ProfileManager, EXEC_PROFILE_DEFAULT, ExecutionProfile
 from cassandra.pool import Host
-from cassandra.connection import EndPoint, DefaultEndPoint, DefaultEndPointFactory
+from cassandra.endpoint import EndPoint, DefaultEndPoint, DefaultEndPointFactory
 from cassandra.policies import (SimpleConvictionPolicy, RoundRobinPolicy,
                                 ConstantReconnectionPolicy, IdentityTranslator)
 

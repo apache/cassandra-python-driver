@@ -36,7 +36,7 @@ from cassandra import ConsistencyLevel
 from cassandra.query import SimpleStatement, TraceUnavailable, tuple_factory
 from cassandra.auth import PlainTextAuthProvider, SaslAuthProvider
 from cassandra import connection
-from cassandra.connection import DefaultEndPoint
+from cassandra.endpoint import DefaultEndPoint
 
 from tests import notwindows
 from tests.integration import use_singledc, get_server_versions, CASSANDRA_VERSION, \

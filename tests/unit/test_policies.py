@@ -26,7 +26,7 @@ from threading import Thread
 
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster
-from cassandra.connection import DefaultEndPoint
+from cassandra.endpoint import DefaultEndPoint
 from cassandra.metadata import Metadata
 from cassandra.policies import (RoundRobinPolicy, WhiteListRoundRobinPolicy, DCAwareRoundRobinPolicy,
                                 TokenAwarePolicy, SimpleConvictionPolicy,
@@ -1247,6 +1247,17 @@ class WhiteListRoundRobinPolicyTest(unittest.TestCase):
         hosts = ['localhost']
         policy = WhiteListRoundRobinPolicy(hosts)
         host = Host(DefaultEndPoint("127.0.0.1"), SimpleConvictionPolicy)
+        policy.populate(None, [host])
+
+        qplan = list(policy.make_query_plan())
+        self.assertEqual(sorted(qplan), [host])
+
+        self.assertEqual(policy.distance(host), HostDistance.LOCAL)
+
+    def test_hosts_with_hostname_and_port(self):
+        hosts = ['localhost']
+        policy = WhiteListRoundRobinPolicy(hosts)
+        host = Host(DefaultEndPoint("127.0.0.1", 1000), SimpleConvictionPolicy)
         policy.populate(None, [host])
 
         qplan = list(policy.make_query_plan())

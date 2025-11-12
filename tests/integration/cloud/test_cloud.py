@@ -24,7 +24,7 @@ from ssl import SSLContext, PROTOCOL_TLS
 
 from cassandra import DriverException, ConsistencyLevel, InvalidRequest
 from cassandra.cluster import NoHostAvailable, ExecutionProfile, Cluster, _execution_profile_to_string
-from cassandra.connection import SniEndPoint
+from cassandra.endpoint import SniEndPoint
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, ConstantReconnectionPolicy
 

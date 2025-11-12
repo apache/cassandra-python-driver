@@ -20,7 +20,7 @@ from cassandra.cluster import ExecutionProfile, EXEC_PROFILE_DEFAULT
 from cassandra.policies import HostFilterPolicy, RoundRobinPolicy,  SimpleConvictionPolicy, \
     WhiteListRoundRobinPolicy
 from cassandra.pool import Host
-from cassandra.connection import DefaultEndPoint
+from cassandra.endpoint import DefaultEndPoint
 
 from tests.integration import local, use_singledc, TestCluster
 
@@ -82,7 +82,22 @@ class WhiteListRoundRobinPolicyTests(unittest.TestCase):
         only_connect_hosts = {"127.0.0.1", "127.0.0.2"}
         white_list = ExecutionProfile(load_balancing_policy=WhiteListRoundRobinPolicy(only_connect_hosts))
         cluster = TestCluster(execution_profiles={"white_list": white_list})
-        #cluster = Cluster(load_balancing_policy=WhiteListRoundRobinPolicy(only_connect_hosts))
+        session = cluster.connect(wait_for_all_pools=True)
+        queried_hosts = set()
+        for _ in range(10):
+            response = session.execute('SELECT * from system.local', execution_profile="white_list")
+            queried_hosts.update(response.response_future.attempted_hosts)
+        queried_hosts = set(host.address for host in queried_hosts)
+        self.assertEqual(queried_hosts, only_connect_hosts)
+
+    @local
+    def test_only_connects_to_subset_with_port(self):
+        only_connect_hosts = {
+            ("127.0.0.1", 9042),
+            ("127.0.0.2", 9043)
+        }
+        white_list = ExecutionProfile(load_balancing_policy=WhiteListRoundRobinPolicy(only_connect_hosts))
+        cluster = TestCluster(execution_profiles={"white_list": white_list})
         session = cluster.connect(wait_for_all_pools=True)
         queried_hosts = set()
         for _ in range(10):

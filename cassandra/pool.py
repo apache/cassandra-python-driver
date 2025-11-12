@@ -30,7 +30,8 @@ except ImportError:
     from cassandra.util import WeakSet  # NOQA
 
 from cassandra import AuthenticationFailed
-from cassandra.connection import ConnectionException, EndPoint, DefaultEndPoint
+from cassandra.connection import ConnectionException
+from cassandra.endpoint import EndPoint, DefaultEndPoint
 from cassandra.policies import HostDistance
 
 log = logging.getLogger(__name__)

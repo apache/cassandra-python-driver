@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from collections import namedtuple
-from functools import lru_cache
 from itertools import islice, cycle, groupby, repeat
 import logging
 from random import randint, shuffle
@@ -33,6 +32,7 @@ from cassandra import WriteType as WT
 WriteType = WT
 
 from cassandra import ConsistencyLevel, OperationTimedOut
+from cassandra.endpoint import DefaultEndPoint
 
 class HostDistance(object):
     """
@@ -412,7 +412,7 @@ class WhiteListRoundRobinPolicy(RoundRobinPolicy):
     regardless of what datacenter the nodes may be in, but
     only if that node exists in the list of allowed nodes
 
-    This policy is addresses the issue described in
+    This policy addresses the issue described in
     https://datastax-oss.atlassian.net/browse/JAVA-145
     Where connection errors occur when connection
     attempts are made to private IP addresses remotely
@@ -420,17 +420,36 @@ class WhiteListRoundRobinPolicy(RoundRobinPolicy):
 
     def __init__(self, hosts):
         """
-        The `hosts` parameter should be a sequence of hosts to permit
-        connections to.
+        The `hosts` parameter should be one of:
+        * A sequence of str containing the addresses to permit connections to.
+        * A sequence of (str, int) containing the address + port to permit connections to.
         """
         self._allowed_hosts = tuple(hosts)
-        self._allowed_hosts_resolved = [endpoint[4][0] for a in self._allowed_hosts
-                                        for endpoint in socket.getaddrinfo(a, None, socket.AF_UNSPEC, socket.SOCK_STREAM)]
+
+        self._allowed_endpoints = []
+        self._allowed_addresses = []
+
+        for host in hosts:
+            if isinstance(host, str):
+                # If the user provides only a host name, the whitelist should check only the port, do not assume they use the default port.
+                address = host
+
+                for endpoint in socket.getaddrinfo(address, None, socket.AF_UNSPEC, socket.SOCK_STREAM):
+                    self._allowed_addresses.append(endpoint[4][0])
+            elif isinstance(host, tuple):
+                # If the user provides a port, the whitelist should check both the host and the port
+                (address, port) = host
+
+                for endpoint in socket.getaddrinfo(address, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
+                    self._allowed_endpoints.append(DefaultEndPoint(endpoint[4][0], endpoint[4][1]))
+            else:
+                raise TypeError("hosts must be a sequence of str or a sequence of (str, int) tuples")
+
 
         RoundRobinPolicy.__init__(self)
 
     def populate(self, cluster, hosts):
-        self._live_hosts = frozenset(h for h in hosts if h.address in self._allowed_hosts_resolved)
+        self._live_hosts = frozenset(h for h in hosts if h.endpoint in self._allowed_endpoints or h.address in self._allowed_addresses)
 
         if len(hosts) <= 1:
             self._position = 0
@@ -438,17 +457,17 @@ class WhiteListRoundRobinPolicy(RoundRobinPolicy):
             self._position = randint(0, len(hosts) - 1)
 
     def distance(self, host):
-        if host.address in self._allowed_hosts_resolved:
+        if host.endpoint in self._allowed_endpoints or host.address in self._allowed_addresses:
             return HostDistance.LOCAL
         else:
             return HostDistance.IGNORED
 
     def on_up(self, host):
-        if host.address in self._allowed_hosts_resolved:
+        if host.endpoint in self._allowed_endpoints or host.address in self._allowed_addresses:
             RoundRobinPolicy.on_up(self, host)
 
     def on_add(self, host):
-        if host.address in self._allowed_hosts_resolved:
+        if host.endpoint in self._allowed_endpoints or host.address in self._allowed_addresses:
             RoundRobinPolicy.on_add(self, host)
 
 

@@ -18,7 +18,7 @@ import unittest
 from functools import total_ordering
 
 from cassandra.cluster import Cluster
-from cassandra.connection import DefaultEndPoint, EndPoint, DefaultEndPointFactory
+from cassandra.endpoint import DefaultEndPoint, EndPoint, DefaultEndPointFactory
 from cassandra.metadata import _NodeInfo
 from tests.integration import requiressimulacron
 from tests.integration.simulacron import SimulacronCluster, PROTOCOL_VERSION

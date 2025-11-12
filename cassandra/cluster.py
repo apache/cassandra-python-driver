@@ -48,10 +48,10 @@ from cassandra import (ConsistencyLevel, AuthenticationFailed,
                        SchemaTargetType, DriverException, ProtocolVersion,
                        UnresolvableContactPoints, DependencyException)
 from cassandra.auth import _proxy_execute_key, PlainTextAuthProvider
+from cassandra.endpoint import EndPoint, DefaultEndPoint, DefaultEndPointFactory, SniEndPointFactory
 from cassandra.connection import (ConnectionException, ConnectionShutdown,
                                   ConnectionHeartbeat, ProtocolVersionUnsupported,
-                                  EndPoint, DefaultEndPoint, DefaultEndPointFactory,
-                                  ContinuousPagingState, SniEndPointFactory, ConnectionBusy)
+                                  ContinuousPagingState, ConnectionBusy)
 from cassandra.cqltypes import UserType
 from cassandra.encoder import Encoder
 from cassandra.protocol import (QueryMessage, ResultMessage,
