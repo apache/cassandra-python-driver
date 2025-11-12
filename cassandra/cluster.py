@@ -3004,6 +3004,58 @@ class Session(object):
 
         self.submit(query_future.send_request)
 
+    def prepare_async(self, query, custom_payload=None, keyspace=None):
+        """
+        Prepare the given query and return a :class:`~.ResponseFuture`
+        object.  You may also call :meth:`~.ResponseFuture.result()`
+        on the :class:`.ResponseFuture` to synchronously block for
+        prepared statement object at any time.
+
+        See :meth:`Session.prepare` for parameter definitions.
+
+        Example usage::
+
+            >>> future = session.prepare_async("SELECT * FROM mycf")
+            >>> # do other stuff...
+
+            >>> try:
+            ...     prepared_statement = future.result()
+            ... except Exception:
+            ...     log.exception("Operation failed:")
+        """
+        future = self._create_prepare_response_future(query, keyspace, custom_payload)
+        future._protocol_handler = self.client_protocol_handler
+        self._on_request(future)
+        future.send_request()
+        return future
+
+    def _create_prepare_response_future(self, query, keyspace, custom_payload):
+        message = PrepareMessage(query=query, keyspace=keyspace)
+        future = ResponseFuture(self, message, query=None, timeout=self.default_timeout)
+
+        def _prepare_result_processor(future, response):
+            prepared_keyspace = keyspace if keyspace else None
+            prepared_statement = PreparedStatement.from_message(
+                response.query_id, response.bind_metadata, response.pk_indexes, self.cluster.metadata, query,
+                prepared_keyspace,
+                self._protocol_version, response.column_metadata, response.result_metadata_id,
+                self.cluster.column_encryption_policy)
+            prepared_statement.custom_payload = custom_payload
+            self.cluster.add_prepared(response.query_id, prepared_statement)
+            if self.cluster.prepare_on_all_hosts:
+                # prepare statement on all hosts
+                host = future._current_host
+                try:
+                    self.prepare_on_all_nodes(future.message.query, host, future.message.keyspace)
+                except Exception:
+                    log.exception("Error preparing query on all hosts:")
+
+            return prepared_statement
+
+        future._set_result_processor(_prepare_result_processor)
+        return future
+
+
     def _create_response_future(self, query, parameters, trace, custom_payload,
                                 timeout, execution_profile=EXEC_PROFILE_DEFAULT,
                                 paging_state=None, host=None):
@@ -3212,36 +3264,18 @@ class Session(object):
         **Important**: PreparedStatements should be prepared only once.
         Preparing the same query more than once will likely affect performance.
 
+        When :meth:`~.Cluster.prepare_on_all_hosts` is enabled, method
+        attempts to prepare given query on all hosts and waits for each node to respond.
+        Preparing CQL query on other nodes may fail, but error is not propagated
+        to the caller.
+
         `custom_payload` is a key value map to be passed along with the prepare
         message. See :ref:`custom_payload`.
         """
-        message = PrepareMessage(query=query, keyspace=keyspace)
-        future = ResponseFuture(self, message, query=None, timeout=self.default_timeout)
-        try:
-            future.send_request()
-            response = future.result().one()
-        except Exception:
-            log.exception("Error preparing query:")
-            raise
+        future = self.prepare_async(query, custom_payload, keyspace)
+        return future.result()
 
-        prepared_keyspace = keyspace if keyspace else None
-        prepared_statement = PreparedStatement.from_message(
-            response.query_id, response.bind_metadata, response.pk_indexes, self.cluster.metadata, query, prepared_keyspace,
-            self._protocol_version, response.column_metadata, response.result_metadata_id, self.cluster.column_encryption_policy)
-        prepared_statement.custom_payload = future.custom_payload
-
-        self.cluster.add_prepared(response.query_id, prepared_statement)
-
-        if self.cluster.prepare_on_all_hosts:
-            host = future._current_host
-            try:
-                self.prepare_on_all_hosts(prepared_statement.query_string, host, prepared_keyspace)
-            except Exception:
-                log.exception("Error preparing query on all hosts:")
-
-        return prepared_statement
-
-    def prepare_on_all_hosts(self, query, excluded_host, keyspace=None):
+    def prepare_on_all_nodes(self, query, excluded_host, keyspace=None):
         """
         Prepare the given query on all hosts, excluding ``excluded_host``.
         Intended for internal use only.
@@ -4414,6 +4448,7 @@ class ResponseFuture(object):
     _col_types = None
     _final_exception = None
     _query_traces = None
+    _result_processor = None
     _callbacks = None
     _errbacks = None
     _current_host = None
@@ -5045,9 +5080,19 @@ class ResponseFuture(object):
         """
         self._event.wait()
         if self._final_result is not _NOT_SET:
-            return ResultSet(self, self._final_result)
+            if self._result_processor is not None:
+                return self._result_processor(self, self._final_result)
+            else:
+                return ResultSet(self, self._final_result)
         else:
             raise self._final_exception
+
+    def _set_result_processor(self, result_processor):
+        """
+        Sets internal result processor which allows to control object
+        returned by :meth:`ResponseFuture.result()` method.
+        """
+        self._result_processor = result_processor
 
     def get_query_trace_ids(self):
         """

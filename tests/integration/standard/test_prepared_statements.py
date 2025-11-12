@@ -24,6 +24,7 @@ from packaging.version import Version
 from cassandra import InvalidRequest, DriverException
 
 from cassandra import ConsistencyLevel, ProtocolVersion
+from cassandra.cluster import ResponseFuture
 from cassandra.query import PreparedStatement, UNSET_VALUE
 from tests.integration import (get_server_versions, greaterthanorequalcass40, greaterthanorequaldse50,
     requirecassandra, BasicSharedKeyspaceUnitTestCase)
@@ -117,6 +118,83 @@ class PreparedStatementTests(unittest.TestCase):
             SELECT * FROM cf0 WHERE a=?
             """)
 
+        self.assertIsInstance(prepared, PreparedStatement)
+
+        bound = prepared.bind({'a': 'x'})
+        results = self.session.execute(bound)
+        self.assertEqual(results, [('x', 'y', 'z')])
+
+    def test_basic_async(self):
+        """
+        Test basic asynchronous PreparedStatement usage
+        """
+        self.session.execute(
+            """
+            DROP KEYSPACE IF EXISTS preparedtests
+            """
+        )
+        self.session.execute(
+            """
+            CREATE KEYSPACE preparedtests
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}
+            """)
+
+        self.session.set_keyspace("preparedtests")
+        self.session.execute(
+            """
+            CREATE TABLE cf0 (
+                a text,
+                b text,
+                c text,
+                PRIMARY KEY (a, b)
+            )
+            """)
+
+        prepared_future = self.session.prepare_async(
+            """
+            INSERT INTO cf0 (a, b, c) VALUES  (?, ?, ?)
+            """)
+        self.assertIsInstance(prepared_future, ResponseFuture)
+        prepared = prepared_future.result()
+        self.assertIsInstance(prepared, PreparedStatement)
+
+        bound = prepared.bind(('a', 'b', 'c'))
+        self.session.execute(bound)
+
+        prepared_future = self.session.prepare_async(
+            """
+            SELECT * FROM cf0 WHERE a=?
+            """)
+        self.assertIsInstance(prepared_future, ResponseFuture)
+        prepared = prepared_future.result()
+        self.assertIsInstance(prepared, PreparedStatement)
+
+        bound = prepared.bind(('a'))
+        results = self.session.execute(bound)
+        self.assertEqual(results, [('a', 'b', 'c')])
+
+        # test with new dict binding
+        prepared_future = self.session.prepare_async(
+            """
+            INSERT INTO cf0 (a, b, c) VALUES  (?, ?, ?)
+            """)
+        self.assertIsInstance(prepared_future, ResponseFuture)
+        prepared = prepared_future.result()
+        self.assertIsInstance(prepared, PreparedStatement)
+
+        bound = prepared.bind({
+            'a': 'x',
+            'b': 'y',
+            'c': 'z'
+        })
+        self.session.execute(bound)
+
+        prepared_future = self.session.prepare_async(
+            """
+            SELECT * FROM cf0 WHERE a=?
+            """)
+        self.assertIsInstance(prepared_future, ResponseFuture)
+        prepared = prepared_future.result()
         self.assertIsInstance(prepared, PreparedStatement)
 
         bound = prepared.bind({'a': 'x'})
