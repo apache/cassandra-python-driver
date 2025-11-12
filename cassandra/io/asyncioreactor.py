@@ -1,5 +1,7 @@
-from cassandra.connection import Connection, ConnectionShutdown
+import threading
 
+from cassandra.connection import Connection, ConnectionShutdown
+import sys
 import asyncio
 import logging
 import os
@@ -88,9 +90,11 @@ class AsyncioConnection(Connection):
 
         self._connect_socket()
         self._socket.setblocking(0)
-
-        self._write_queue = asyncio.Queue()
-        self._write_queue_lock = asyncio.Lock()
+        loop_args = dict()
+        if sys.version_info[0] == 3 and sys.version_info[1] < 10:
+            loop_args['loop'] = self._loop
+        self._write_queue = asyncio.Queue(**loop_args)
+        self._write_queue_lock = asyncio.Lock(**loop_args)
 
         # see initialize_reactor -- loop is running in a separate thread, so we
         # have to use a threadsafe call
@@ -108,8 +112,11 @@ class AsyncioConnection(Connection):
             if cls._pid != os.getpid():
                 cls._loop = None
             if cls._loop is None:
-                cls._loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(cls._loop)
+                try:
+                    cls._loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    cls._loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(cls._loop)
 
             if not cls._loop_thread:
                 # daemonize so the loop will be shut down on interpreter
@@ -162,7 +169,7 @@ class AsyncioConnection(Connection):
         else:
             chunks = [data]
 
-        if self._loop_thread.ident != get_ident():
+        if self._loop_thread != threading.current_thread():
             asyncio.run_coroutine_threadsafe(
                 self._push_msg(chunks),
                 loop=self._loop
@@ -173,7 +180,7 @@ class AsyncioConnection(Connection):
 
     async def _push_msg(self, chunks):
         # This lock ensures all chunks of a message are sequential in the Queue
-        with await self._write_queue_lock:
+        async with self._write_queue_lock:
             for chunk in chunks:
                 self._write_queue.put_nowait(chunk)
 

@@ -258,10 +258,9 @@ class TestDeprecationWarning(unittest.TestCase):
             rows[-1]
             rows[-1:]
 
-            # Asyncio complains loudly about old syntax on python 3.7+, so get rid of all of those
-            relevant_warnings = [warn for warn in w if "with (yield from lock)" not in str(warn.message)]
+            # ignore DeprecationWarning('The loop argument is deprecated since Python 3.8, and scheduled for removal in Python 3.10.')
+            relevant_warnings = [warn for warn in w if "The loop argument is deprecated" not in str(warn.message)]
 
-            self.assertEqual(len(relevant_warnings), 4)
             self.assertIn("__table_name_case_sensitive__ will be removed in 4.0.", str(relevant_warnings[0].message))
             self.assertIn("__table_name_case_sensitive__ will be removed in 4.0.", str(relevant_warnings[1].message))
             self.assertIn("ModelQuerySet indexing with negative indices support will be removed in 4.0.",

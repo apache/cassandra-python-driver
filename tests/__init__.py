@@ -114,3 +114,4 @@ def is_windows():
 
 notwindows = unittest.skipUnless(not is_windows(), "This test is not adequate for windows")
 notpypy = unittest.skipUnless(not platform.python_implementation() == 'PyPy', "This tests is not suitable for pypy")
+notasyncio = unittest.skipUnless(not EVENT_LOOP_MANAGER == 'asyncio', "This tests is not suitable for EVENT_LOOP_MANAGER=asyncio")

@@ -38,7 +38,7 @@ from cassandra.auth import PlainTextAuthProvider, SaslAuthProvider
 from cassandra import connection
 from cassandra.connection import DefaultEndPoint
 
-from tests import notwindows
+from tests import notwindows, notasyncio
 from tests.integration import use_singledc, get_server_versions, CASSANDRA_VERSION, \
     execute_until_pass, execute_with_long_wait_retry, get_node, MockLoggingHandler, get_unsupported_lower_protocol, \
     get_unsupported_upper_protocol, protocolv6, local, CASSANDRA_IP, greaterthanorequalcass30, lessthanorequalcass40, \
@@ -1109,6 +1109,7 @@ class ClusterTests(unittest.TestCase):
             raise Exception("add_execution_profile didn't timeout after {0} retries".format(max_retry_count))
 
     @notwindows
+    @notasyncio  # asyncio can't do timeouts smaller than 1ms, as this test requires
     def test_execute_query_timeout(self):
         with TestCluster() as cluster:
             session = cluster.connect(wait_for_all_pools=True)
