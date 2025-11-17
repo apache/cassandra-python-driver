@@ -846,9 +846,12 @@ class _SimpleParameterizedType(_ParameterizedType):
         buf.write(pack(len(items)))
         inner_proto = max(3, protocol_version)
         for item in items:
-            itembytes = subtype.to_binary(item, inner_proto)
-            buf.write(pack(len(itembytes)))
-            buf.write(itembytes)
+            if item is None:
+                buf.write(pack(-1))
+            else:
+                itembytes = subtype.to_binary(item, inner_proto)
+                buf.write(pack(len(itembytes)))
+                buf.write(itembytes)
         return buf.getvalue()
 
 
@@ -916,12 +919,18 @@ class MapType(_ParameterizedType):
             raise TypeError("Got a non-map object for a map value")
         inner_proto = max(3, protocol_version)
         for key, val in items:
-            keybytes = key_type.to_binary(key, inner_proto)
-            valbytes = value_type.to_binary(val, inner_proto)
-            buf.write(pack(len(keybytes)))
-            buf.write(keybytes)
-            buf.write(pack(len(valbytes)))
-            buf.write(valbytes)
+            if key is not None:
+                keybytes = key_type.to_binary(key, inner_proto)
+                buf.write(pack(len(keybytes)))
+                buf.write(keybytes)
+            else:
+                buf.write(pack(-1))
+            if val is not None:
+                valbytes = value_type.to_binary(val, inner_proto)
+                buf.write(pack(len(valbytes)))
+                buf.write(valbytes)
+            else:
+                buf.write(pack(-1))
         return buf.getvalue()
 
 
