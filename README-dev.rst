@@ -1,5 +1,7 @@
 Releasing
 =========
+Note: the precise details of some of these steps have changed.  Leaving this here as a guide only.
+
 * Run the tests and ensure they all pass
 * Update CHANGELOG.rst
   * Check for any missing entries
@@ -13,7 +15,8 @@ Releasing
 * Tag the release.  For example: ``git tag -a 1.0.0 -m 'version 1.0.0'``
 * Push the tag and new ``master``: ``git push origin 1.0.0 ; git push origin master``
 * Update the `python-driver` submodule of `python-driver-wheels`,
-  commit then push. This will trigger TravisCI and the wheels building.
+  commit then push.
+* Trigger the Github Actions necessary to build wheels for the various platforms
 * For a GA release, upload the package to pypi::
 
     # Clean the working directory
@@ -49,84 +52,11 @@ Releasing
     * this is typically a matter of merging or rebasing onto master
     * test and push updated branch to origin
 
-* Update the JIRA versions: https://datastax-oss.atlassian.net/plugins/servlet/project-config/PYTHON/versions
+* Update the JIRA releases: https://issues.apache.org/jira/projects/CASSPYTHON?selectedItem=com.atlassian.jira.jira-projects-plugin:release-page
 
   * add release dates and set version as "released"
 
 * Make an announcement on the mailing list
-
-Building the Docs
-=================
-Sphinx is required to build the docs. You probably want to install through apt,
-if possible::
-
-    sudo apt-get install python-sphinx
-
-pip may also work::
-
-    sudo pip install -U Sphinx
-
-To build the docs, run::
-
-    python setup.py doc
-
-Upload the Docs
-=================
-
-This is deprecated. The docs is now only published on https://docs.datastax.com.
-
-To upload the docs, checkout the ``gh-pages`` branch and copy the entire
-contents all of ``docs/_build/X.Y.Z/*`` into the root of the ``gh-pages`` branch
-and then push that branch to github.
-
-For example::
-
-    git checkout 1.0.0
-    python setup.py doc
-    git checkout gh-pages
-    cp -R docs/_build/1.0.0/* .
-    git add --update  # add modified files
-    # Also make sure to add any new documentation files!
-    git commit -m 'Update docs (version 1.0.0)'
-    git push origin gh-pages
-
-If docs build includes errors, those errors may not show up in the next build unless
-you have changed the files with errors.  It's good to occassionally clear the build
-directory and build from scratch::
-
-    rm -rf docs/_build/*
-
-Documentor
-==========
-We now also use another tool called Documentor with Sphinx source to build docs.
-This gives us versioned docs with nice integrated search. This is a private tool
-of DataStax.
-
-Dependencies
-------------
-Sphinx
-~~~~~~
-Installed as described above
-
-Documentor
-~~~~~~~~~~
-Clone and setup Documentor as specified in `the project <https://github.com/riptano/documentor#installation-and-quick-start>`_.
-This tool assumes Ruby, bundler, and npm are present.
-
-Building
---------
-The setup script expects documentor to be in the system path. You can either add it permanently or run with something
-like this::
-
-    PATH=$PATH:<documentor repo>/bin python setup.py doc
-
-The docs will not display properly just browsing the filesystem in a browser. To view the docs as they would be in most
-web servers, use the SimpleHTTPServer module::
-
-    cd docs/_build/
-    python -m SimpleHTTPServer
-
-Then, browse to `localhost:8000 <http://localhost:8000>`_.
 
 Tests
 =====
@@ -166,7 +96,7 @@ it with the ``PROTOCOL_VERSION`` environment variable::
 
 Testing Multiple Python Versions
 --------------------------------
-Use tox to test all of Python 3.9 through 3.13 and pypy (this is what TravisCI runs)::
+Use tox to test all of Python 3.9 through 3.13 and pypy::
 
     tox
 
@@ -223,17 +153,3 @@ An EAP release is only uploaded on a private server and it is not published on p
     python setup.py doc
 
 * Upload the docs on the EAP download server.
-
-Adding a New Python Runtime Support
-===================================
-
-* Add the new python version to our jenkins image:
-  https://github.com/riptano/openstack-jenkins-drivers/
-
-* Add the new python version in the Jenkinsfile and TravisCI configs as appropriate
-
-* Run the tests and ensure they all pass
-  * also test all event loops
-
-* Update the wheels building repo to support that version:
-  https://github.com/datastax/python-driver-wheels

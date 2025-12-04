@@ -63,23 +63,20 @@ community) is now maintained as an integral part of this package. Refer to
 
 Contributing
 ------------
-See `CONTRIBUTING.md <https://github.com/datastax/python-driver/blob/master/CONTRIBUTING.rst>`_.
-
-Error Handling
---------------
-While originally written for the Java driver, users may reference the `Cassandra error handling done right blog <https://www.datastax.com/blog/cassandra-error-handling-done-right>`_ for resolving error handling scenarios with Apache Cassandra.
+See `CONTRIBUTING.rst <https://github.com/datastax/python-driver/blob/master/CONTRIBUTING.rst>`_.
 
 Reporting Problems
 ------------------
 Please report any bugs and make any feature requests on the
-`JIRA <https://datastax-oss.atlassian.net/browse/PYTHON>`_ issue tracker.
+`CASSPYTHON project <https://issues.apache.org/jira/issues/?jql=project%20%3D%20CASSPYTHON%20ORDER%20BY%20key%20DESC>`_
+of the ASF JIRA.
 
 If you would like to contribute, please feel free to open a pull request.
 
 Getting Help
 ------------
-Your best options for getting help with the driver is the
-`mailing list <https://groups.google.com/a/lists.datastax.com/forum/#!forum/python-driver-user>`_.
+You can talk about the driver, ask questions and get help in the #cassandra-drivers channel on 
+`ASF Slack <https://the-asf.slack.com/>`_.
 
 License
 -------
