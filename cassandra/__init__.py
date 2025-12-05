@@ -94,6 +94,11 @@ class ConsistencyLevel(object):
     one response.
     """
 
+    NODE_LOCAL = 11
+    """
+    Experimental consistency level for querying only the local node.
+    """
+
     @staticmethod
     def is_serial(cl):
         return cl == ConsistencyLevel.SERIAL or cl == ConsistencyLevel.LOCAL_SERIAL
@@ -110,7 +115,8 @@ ConsistencyLevel.value_to_name = {
     ConsistencyLevel.EACH_QUORUM: 'EACH_QUORUM',
     ConsistencyLevel.SERIAL: 'SERIAL',
     ConsistencyLevel.LOCAL_SERIAL: 'LOCAL_SERIAL',
-    ConsistencyLevel.LOCAL_ONE: 'LOCAL_ONE'
+    ConsistencyLevel.LOCAL_ONE: 'LOCAL_ONE',
+    ConsistencyLevel.NODE_LOCAL: 'NODE_LOCAL'
 }
 
 ConsistencyLevel.name_to_value = {
@@ -124,7 +130,8 @@ ConsistencyLevel.name_to_value = {
     'EACH_QUORUM': ConsistencyLevel.EACH_QUORUM,
     'SERIAL': ConsistencyLevel.SERIAL,
     'LOCAL_SERIAL': ConsistencyLevel.LOCAL_SERIAL,
-    'LOCAL_ONE': ConsistencyLevel.LOCAL_ONE
+    'LOCAL_ONE': ConsistencyLevel.LOCAL_ONE,
+    'NODE_LOCAL': ConsistencyLevel.NODE_LOCAL
 }
 
 
