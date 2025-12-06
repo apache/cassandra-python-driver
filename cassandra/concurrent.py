@@ -83,7 +83,7 @@ class _ConcurrentExecutor(object):
     def _execute(self, idx, statement, params):
         self._exec_depth += 1
         try:
-            future = self.session.execute_async(statement, params, timeout=None, execution_profile=self._execution_profile)
+            future = self.session.execute_async(statement, params, execution_profile=self._execution_profile)
             args = (future, idx)
             future.add_callbacks(
                 callback=self._on_success, callback_args=args,
