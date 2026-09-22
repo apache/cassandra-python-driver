@@ -15,13 +15,12 @@
 # limitations under the License.
 import unittest
 
-import sys
-
 from cassandra.cqlengine.connection import get_session
 from cassandra.cqlengine.models import Model
 from cassandra.cqlengine import columns
 
 from uuid import uuid4
+
 
 class TestQueryUpdateModel(Model):
 
@@ -32,6 +31,7 @@ class TestQueryUpdateModel(Model):
     text_set = columns.Set(columns.Text, required=False)
     text_list = columns.List(columns.Text, required=False)
     text_map = columns.Map(columns.Text, columns.Text, required=False)
+
 
 class BaseCassEngTestCase(unittest.TestCase):
 
@@ -48,6 +48,5 @@ class BaseCassEngTestCase(unittest.TestCase):
         self.assertFalse(hasattr(obj, attr),
                 "{0} shouldn't have the attribute: {1}".format(obj, attr))
 
-    if sys.version_info > (3, 0):
-        def assertItemsEqual(self, first, second, msg=None):
-            return self.assertCountEqual(first, second, msg)
+    def assertItemsEqual(self, first, second, msg=None):
+        return self.assertCountEqual(first, second, msg)

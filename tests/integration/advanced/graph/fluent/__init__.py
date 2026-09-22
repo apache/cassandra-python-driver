@@ -585,10 +585,7 @@ def _validate_prop(key, value, unittest):
         typ = int
 
     elif any(key.startswith(t) for t in ('long',)):
-        if sys.version_info >= (3, 0):
-            typ = int
-        else:
-            typ = long
+        typ = int
     elif any(key.startswith(t) for t in ('float', 'double')):
         typ = float
     elif any(key.startswith(t) for t in ('polygon',)):

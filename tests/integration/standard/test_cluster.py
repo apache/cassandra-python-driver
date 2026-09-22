@@ -754,8 +754,7 @@ class ClusterTests(unittest.TestCase):
 
     def test_idle_heartbeat(self):
         interval = 2
-        cluster = TestCluster(idle_heartbeat_interval=interval,
-                              monitor_reporting_enabled=False)
+        cluster = TestCluster(idle_heartbeat_interval=interval)
         if PROTOCOL_VERSION < 3:
             cluster.set_core_connections_per_host(HostDistance.LOCAL, 1)
         session = cluster.connect(wait_for_all_pools=True)
@@ -877,7 +876,7 @@ class ClusterTests(unittest.TestCase):
                 RoundRobinPolicy(), lambda host: host.address == CASSANDRA_IP
             )
         )
-        with TestCluster(execution_profiles={'node1': node1}, monitor_reporting_enabled=False) as cluster:
+        with TestCluster(execution_profiles={'node1': node1}) as cluster:
             session = cluster.connect(wait_for_all_pools=True)
 
             # default is DCA RR for all hosts

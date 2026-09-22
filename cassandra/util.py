@@ -31,14 +31,13 @@ import sys
 import time
 import uuid
 
+from cassandra import DriverException
+
 _HAS_GEOMET = True
 try:
     from geomet import wkt
 except:
     _HAS_GEOMET = False
-
-
-from cassandra import DriverException
 
 DATETIME_EPOC = datetime.datetime(1970, 1, 1).replace(tzinfo=None)
 UTC_DATETIME_EPOC = datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc).replace(tzinfo=None)
@@ -112,7 +111,8 @@ def min_uuid_from_time(timestamp):
 
     See :func:`uuid_from_time` for argument and return types.
     """
-    return uuid_from_time(timestamp, 0x808080808080, 0x80)  # Cassandra does byte-wise comparison; fill with min signed bytes (0x80 = -128)
+    # Pad with 0x80 (min signed byte) to ensure this UUID acts as the lower bound for the timestamp
+    return uuid_from_time(timestamp, 0x808080808080, 0x80)
 
 
 def max_uuid_from_time(timestamp):
@@ -176,6 +176,7 @@ def uuid_from_time(time_arg, node=None, clock_seq=None):
     return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
                              clock_seq_hi_variant, clock_seq_low, node), version=1)
 
+
 LOWEST_TIME_UUID = uuid.UUID('00000000-0000-1000-8080-808080808080')
 """ The lowest possible TimeUUID, as sorted by Cassandra. """
 
@@ -191,7 +192,7 @@ def _addrinfo_or_none(contact_point, port):
     """
     try:
         value = socket.getaddrinfo(contact_point, port,
-                                  socket.AF_UNSPEC, socket.SOCK_STREAM)
+                                   socket.AF_UNSPEC, socket.SOCK_STREAM)
         return value
     except socket.gaierror:
         log.debug('Could not resolve hostname "{}" '
@@ -264,10 +265,10 @@ class WeakSet(object):
             self.update(data)
 
     def _commit_removals(self):
-        l = self._pending_removals
+        pending = self._pending_removals
         discard = self.data.discard
-        while l:
-            discard(l.pop())
+        while pending:
+            discard(pending.pop())
 
     def __iter__(self):
         with _IterationGuard(self):
@@ -347,6 +348,7 @@ class WeakSet(object):
 
     def difference(self, other):
         return self._apply(other, self.data.difference)
+
     __sub__ = difference
 
     def difference_update(self, other):
@@ -368,6 +370,7 @@ class WeakSet(object):
 
     def intersection(self, other):
         return self._apply(other, self.data.intersection)
+
     __and__ = intersection
 
     def intersection_update(self, other):
@@ -383,6 +386,7 @@ class WeakSet(object):
 
     def issubset(self, other):
         return self.data.issubset(ref(item) for item in other)
+
     __lt__ = issubset
 
     def __le__(self, other):
@@ -390,6 +394,7 @@ class WeakSet(object):
 
     def issuperset(self, other):
         return self.data.issuperset(ref(item) for item in other)
+
     __gt__ = issuperset
 
     def __ge__(self, other):
@@ -402,6 +407,7 @@ class WeakSet(object):
 
     def symmetric_difference(self, other):
         return self._apply(other, self.data.symmetric_difference)
+
     __xor__ = symmetric_difference
 
     def symmetric_difference_update(self, other):
@@ -423,6 +429,7 @@ class WeakSet(object):
 
     def union(self, other):
         return self._apply(other, self.data.union)
+
     __or__ = union
 
     def isdisjoint(self, other):
@@ -495,6 +502,7 @@ class SortedSet(object):
 
     def __and__(self, other):
         return self._intersect(other)
+
     __rand__ = __and__
 
     def __iand__(self, other):
@@ -504,6 +512,7 @@ class SortedSet(object):
 
     def __or__(self, other):
         return self.union(other)
+
     __ror__ = __or__
 
     def __ior__(self, other):
@@ -524,6 +533,7 @@ class SortedSet(object):
 
     def __xor__(self, other):
         return self.symmetric_difference(other)
+
     __rxor__ = __xor__
 
     def __ixor__(self, other):
@@ -636,8 +646,10 @@ class SortedSet(object):
         try:
             while lo < hi:
                 mid = (lo + hi) // 2
-                if a[mid] < x: lo = mid + 1
-                else: hi = mid
+                if a[mid] < x:
+                    lo = mid + 1
+                else:
+                    hi = mid
         except TypeError:
             # could not compare a[mid] with x
             # start scanning to find insertion point while swallowing type errors
@@ -645,18 +657,21 @@ class SortedSet(object):
             compared_one = False  # flag is used to determine whether un-comparables are grouped at the front or back
             while lo < hi:
                 try:
-                    if a[lo] == x or a[lo] >= x: break
+                    if a[lo] == x or a[lo] >= x:
+                        break
                     compared_one = True
                 except TypeError:
-                    if compared_one: break
+                    if compared_one:
+                        break
                 lo += 1
         return lo
+
 
 sortedset = SortedSet  # backwards-compatibility
 
 
 class OrderedMap(Mapping):
-    '''
+    """
     An ordered map that accepts non-hashable types for keys. It also maintains the
     insertion order of items, behaving as OrderedDict in that regard. These maps
     are constructed and read just as normal mapping types, except that they may
@@ -680,7 +695,7 @@ class OrderedMap(Mapping):
 
     This class derives from the (immutable) Mapping API. Objects in these maps
     are not intended be modified.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         if len(args) > 1:
@@ -783,11 +798,11 @@ class OrderedMapSerializedKey(OrderedMap):
 
 @total_ordering
 class Time(object):
-    '''
+    """
     Idealized time, independent of day.
 
     Up to nanosecond resolution
-    '''
+    """
 
     MICRO = 1000
     MILLI = 1000 * MICRO
@@ -861,9 +876,9 @@ class Time(object):
         try:
             parts = s.split('.')
             base_time = time.strptime(parts[0], "%H:%M:%S")
-            self.nanosecond_time = (base_time.tm_hour * Time.HOUR +
-                                    base_time.tm_min * Time.MINUTE +
-                                    base_time.tm_sec * Time.SECOND)
+            self.nanosecond_time = (base_time.tm_hour * Time.HOUR
+                                    + base_time.tm_min * Time.MINUTE
+                                    + base_time.tm_sec * Time.SECOND)
 
             if len(parts) > 1:
                 # right pad to 9 digits
@@ -874,10 +889,10 @@ class Time(object):
             raise ValueError("can't interpret %r as a time" % (s,))
 
     def _from_time(self, t):
-        self.nanosecond_time = (t.hour * Time.HOUR +
-                                t.minute * Time.MINUTE +
-                                t.second * Time.SECOND +
-                                t.microsecond * Time.MICRO)
+        self.nanosecond_time = (t.hour * Time.HOUR
+                                + t.minute * Time.MINUTE
+                                + t.second * Time.SECOND
+                                + t.microsecond * Time.MICRO)
 
     def __hash__(self):
         return self.nanosecond_time
@@ -911,13 +926,13 @@ class Time(object):
 
 @total_ordering
 class Date(object):
-    '''
+    """
     Idealized date: year, month, day
 
     Offers wider year range than datetime.date. For Dates that cannot be represented
     as a datetime.date (because datetime.MINYEAR, datetime.MAXYEAR), this type falls back
     to printing days_from_epoch offset.
-    '''
+    """
 
     MINUTE = 60
     HOUR = 60 * MINUTE
@@ -1016,10 +1031,10 @@ def _positional_rename_invalid_identifiers(field_names):
     names_out = list(field_names)
     for index, name in enumerate(field_names):
         if (not all(c.isalnum() or c == '_' for c in name)
-            or keyword.iskeyword(name)
-            or not name
-            or name[0].isdigit()
-            or name.startswith('_')):
+                or keyword.iskeyword(name)
+                or not name
+                or name[0].isdigit()
+                or name.startswith('_')):
             names_out[index] = 'field_%d_' % index
     return names_out
 
@@ -1114,6 +1129,7 @@ class LineString(object):
     """
     Tuple of (x, y) coordinates in the linestring
     """
+
     def __init__(self, coords=tuple()):
         """
         'coords`: a sequence of (x, y) coordinates of points in the linestring
@@ -1151,7 +1167,8 @@ class LineString(object):
             raise ValueError("Invalid WKT geometry: '{0}'".format(s))
 
         if geom['type'] != 'LineString':
-            raise ValueError("Invalid WKT geometry type. Expected 'LineString', got '{0}': '{1}'".format(geom['type'], s))
+            raise ValueError(
+                "Invalid WKT geometry type. Expected 'LineString', got '{0}': '{1}'".format(geom['type'], s))
 
         geom['coordinates'] = list_contents_to_tuple(geom['coordinates'])
 
@@ -1244,7 +1261,8 @@ class Polygon(object):
         return Polygon(exterior=exterior, interiors=interiors)
 
 
-_distance_wkt_pattern = re.compile("distance *\\( *\\( *([\\d\\.-]+) *([\\d+\\.-]+) *\\) *([\\d+\\.-]+) *\\) *$", re.IGNORECASE)
+_distance_wkt_pattern = re.compile("distance *\\( *\\( *([\\d\\.-]+) *([\\d+\\.-]+) *\\) *([\\d+\\.-]+) *\\) *$",
+                                   re.IGNORECASE)
 
 
 class Distance(object):
@@ -1320,7 +1338,8 @@ class Duration(object):
         self.nanoseconds = nanoseconds
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.months == other.months and self.days == other.days and self.nanoseconds == other.nanoseconds
+        return isinstance(other,
+                          self.__class__) and self.months == other.months and self.days == other.days and self.nanoseconds == other.nanoseconds
 
     def __repr__(self):
         return "Duration({0}, {1}, {2})".format(self.months, self.days, self.nanoseconds)
@@ -1471,12 +1490,10 @@ class DateRangeBound(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
-        return (self.milliseconds == other.milliseconds and
-                self.precision == other.precision)
+        return (self.milliseconds == other.milliseconds and self.precision == other.precision)
 
     def __lt__(self, other):
-        return ((str(self.milliseconds), str(self.precision)) <
-                (str(other.milliseconds), str(other.precision)))
+        return ((str(self.milliseconds), str(self.precision)) < (str(other.milliseconds), str(other.precision)))
 
     def datetime(self):
         """
@@ -1672,13 +1689,13 @@ class DateRange(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
-        return (self.lower_bound == other.lower_bound and
-                self.upper_bound == other.upper_bound and
-                self.value == other.value)
+        return (self.lower_bound == other.lower_bound
+                and self.upper_bound == other.upper_bound
+                and self.value == other.value)
 
     def __lt__(self, other):
-        return ((str(self.lower_bound), str(self.upper_bound), str(self.value)) <
-                (str(other.lower_bound), str(other.upper_bound), str(other.value)))
+        return ((str(self.lower_bound), str(self.upper_bound), str(self.value))
+                < (str(other.lower_bound), str(other.upper_bound), str(other.value)))
 
     def __str__(self):
         if self.value:
@@ -1692,7 +1709,9 @@ class DateRange(object):
             self.lower_bound, self.upper_bound, self.value
         )
 
+
 VERSION_REGEX = re.compile("^(\\d+)\\.(\\d+)(\\.\\d+)?(\\.\\d+)?([~\\-]\\w[.\\w]*(?:-\\w[.\\w]*)*)?(\\+[.\\w]+)?$")
+
 
 @total_ordering
 class Version(object):
@@ -1700,7 +1719,7 @@ class Version(object):
     Representation of a Cassandra version.  Mostly follows the implementation of the same logic in the Java driver;
     see https://github.com/apache/cassandra-java-driver/blob/4.19.2/core/src/main/java/com/datastax/oss/driver/api/core/Version.java.
 
-    Cassandra versions are assumed to correspond to major.minor.patch with an optional additional numeric build field as well as a
+    Versions correspond to major.minor.patch with an optional additional numeric build field and
     string prerelease field.
     """
 

@@ -22,7 +22,6 @@ from cassandra.cqlengine.management import sync_table, drop_table, create_keyspa
 from cassandra.cqlengine import models
 from cassandra.cqlengine.models import Model, ModelDefinitionException
 from uuid import uuid1
-from tests.integration import pypy
 from tests.integration.cqlengine.base import TestQueryUpdateModel
 
 class TestModel(unittest.TestCase):
@@ -179,9 +178,6 @@ class ModelOverWriteTest(unittest.TestCase):
     def test_model_over_write(self):
         """
         Test to ensure overwriting of primary keys in model inheritance is allowed
-
-        This is currently only an issue in PyPy. When PYTHON-504 is introduced this should
-        be updated error out and warn the user
 
         @since 3.6.0
         @jira_ticket PYTHON-576

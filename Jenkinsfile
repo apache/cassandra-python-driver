@@ -21,7 +21,7 @@ Matrix Types:
 
 Parameters: 
 
-  EVENT_LOOP: 'LIBEV' (Default), 'GEVENT', 'EVENTLET', 'ASYNCIO', 'ASYNCORE', 'TWISTED'
+  EVENT_LOOP: 'LIBEV' (Default), 'ASYNCIO', 'ASYNCORE'
   CYTHON: Default, 'True', 'False'
 
 */
@@ -296,8 +296,6 @@ def executeStandardTests() {
 
       failure=0
       EVENT_LOOP=${EVENT_LOOP} VERIFY_CYTHON=${CYTHON_ENABLED} JVM_EXTRA_OPTS="$JVM_EXTRA_OPTS -Xss384k" pytest -s -v --log-format="[%(levelname)s] %(asctime)s %(thread)d: %(message)s" --junit-xml=unit_results.xml tests/unit/ || failure=1
-      EVENT_LOOP_MANAGER=eventlet VERIFY_CYTHON=${CYTHON_ENABLED} JVM_EXTRA_OPTS="$JVM_EXTRA_OPTS -Xss384k" pytest -s -v --log-format="[%(levelname)s] %(asctime)s %(thread)d: %(message)s" --junit-xml=unit_eventlet_results.xml tests/unit/io/test_eventletreactor.py || failure=1
-      EVENT_LOOP_MANAGER=gevent VERIFY_CYTHON=${CYTHON_ENABLED} JVM_EXTRA_OPTS="$JVM_EXTRA_OPTS -Xss384k" pytest -s -v --log-format="[%(levelname)s] %(asctime)s %(thread)d: %(message)s" --junit-xml=unit_gevent_results.xml tests/unit/io/test_geventreactor.py || failure=1
       exit $failure
     '''
   } catch (err) {
@@ -390,24 +388,6 @@ def executeStandardTests() {
         currentBuild.result = 'UNSTABLE'
       }
     }
-  }
-
-  try {
-    sh label: 'Execute DataStax Astra integration tests', script: '''#!/bin/bash -lex
-      . ./jenkins-venv/bin/activate
-
-      # Load CCM environment variable
-      set -o allexport
-      . ${HOME}/environment.txt
-      set +o allexport
-
-      . ${JABBA_SHELL}
-      jabba use 1.8
-
-      EVENT_LOOP=${EVENT_LOOP} CLOUD_PROXY_PATH="${HOME}/proxy/" CASSANDRA_VERSION=${CCM_CASSANDRA_VERSION} MAPPED_CASSANDRA_VERSION=${MAPPED_CASSANDRA_VERSION} VERIFY_CYTHON=${CYTHON_ENABLED} JVM_EXTRA_OPTS="$JVM_EXTRA_OPTS -Xss384k" pytest -s -v --log-format="[%(levelname)s] %(asctime)s %(thread)d: %(message)s" --junit-xml=advanced_results.xml tests/integration/cloud/
-    '''
-  } catch (err) {
-    currentBuild.result = 'UNSTABLE'
   }
 
   if (env.PROFILE == 'FULL') {
@@ -688,7 +668,7 @@ pipeline {
                       </table>''')
     choice(
       name: 'EVENT_LOOP',
-      choices: ['LIBEV', 'GEVENT', 'EVENTLET', 'ASYNCIO', 'ASYNCORE', 'TWISTED'],
+      choices: ['LIBEV', 'ASYNCIO', 'ASYNCORE'],
       description: '''<p>Event loop manager to utilize for scheduled or adhoc builds</p>
                       <table style="width:100%">
                         <col width="25%">
@@ -702,24 +682,12 @@ pipeline {
                           <td>A full-featured and high-performance event loop that is loosely modeled after libevent, but without its limitations and bugs</td>
                         </tr>
                         <tr>
-                          <td><strong>GEVENT</strong></td>
-                          <td>A co-routine -based Python networking library that uses greenlet to provide a high-level synchronous API on top of the libev or libuv event loop</td>
-                        </tr>
-                        <tr>
-                          <td><strong>EVENTLET</strong></td>
-                          <td>A concurrent networking library for Python that allows you to change how you run your code, not how you write it</td>
-                        </tr>
-                        <tr>
                           <td><strong>ASYNCIO</strong></td>
                           <td>A library to write concurrent code using the async/await syntax</td>
                         </tr>
                         <tr>
                           <td><strong>ASYNCORE</strong></td>
                           <td>A module provides the basic infrastructure for writing asynchronous socket service clients and servers</td>
-                        </tr>
-                        <tr>
-                          <td><strong>TWISTED</strong></td>
-                          <td>An event-driven networking engine written in Python and licensed under the open source MIT license</td>
                         </tr>
                       </table>''')
     choice(

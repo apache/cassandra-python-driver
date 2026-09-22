@@ -3,10 +3,10 @@ Installation
 
 Supported Platforms
 -------------------
-Python 3.10 through 3.14 are supported.  Both CPython (the standard Python
-implementation) and `PyPy <http://pypy.org>`_ are supported and tested.
+Python 3.10 through 3.14 are supported.  Linux, OSX, and Windows are supported.
 
-Linux, OSX, and Windows are supported.
+As of Python driver 4.0.0 only CPython is supported.  Prior versions also explicitly supported PyPy but we no longer
+support this runtime.  See `CASSPYTHON-14 <https://issues.apache.org/jira/browse/CASSPYTHON-14>`_ for additional information.
 
 Installation through pip
 ------------------------
@@ -18,7 +18,8 @@ the same time as the driver itself.  To install the driver*::
 
 You can use ``pip install --pre cassandra-driver`` if you need to install a beta version.
 
-***Note**: if intending to use optional extensions, install the `dependencies <#optional-non-python-dependencies>`_ first. The driver may need to be reinstalled if dependencies are added after the initial installation.
+***Note**: if intending to use optional extensions, install the `dependencies <#optional-non-python-dependencies>`_ first.
+The driver may need to be reinstalled if dependencies are added after the initial installation.
 
 Verifying your Installation
 ---------------------------
@@ -26,7 +27,7 @@ To check if the installation was successful, you can run::
 
     python -c 'import cassandra; print(cassandra.__version__)'
 
-This command should print something like ``3.30.0``.
+This command should print something like ``3.30.1``.
 
 .. _installation-datastax-graph:
 
@@ -196,9 +197,6 @@ asyncore from the runtime but this event loop can still be used in newer version
 The ``asyncio`` event loop is generally functional but still somewhat experimental and not recommended
 for production systems.  We anticipate significant improvements to this event loop (including hopefully
 making this event loop the default going forward) in 3.31.0.
-
-The ``gevent``, ``eventlet`` and ``Twisted`` event loops have been deprecated in 3.30.0 and will be removed
-completely in 3.31.0.
 
 libev support
 ^^^^^^^^^^^^^

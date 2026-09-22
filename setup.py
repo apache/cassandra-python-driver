@@ -27,7 +27,6 @@ except ImportError:
 # ========================== General purpose vals to describe our current platform ==========================
 is_windows = sys.platform.startswith('win32')
 is_macos = sys.platform.startswith('darwin')
-is_pypy = "PyPy" in sys.version
 is_supported_platform = sys.platform != "cli" and not sys.platform.startswith("java")
 is_supported_arch = sys.byteorder != "big"
 is_supported = is_supported_platform and is_supported_arch
@@ -47,15 +46,6 @@ The optional C extensions are not supported on big-endian systems.
 ===============================================================================
 """
 
-pypy_unsupported_msg = \
-"""
-=================================================================================
-Some optional C extensions are not supported in PyPy. Only murmur3 will be built.
-=================================================================================
-"""
-
-if is_pypy:
-    sys.stderr.write(pypy_unsupported_msg)
 if not is_supported_platform:
     sys.stderr.write(platform_unsupported_msg)
 elif not is_supported_arch:
@@ -72,7 +62,7 @@ def key_or_false(k):
 
 try_murmur3 = key_or_false("build-murmur3-extension") and is_supported
 try_libev = key_or_false("build-libev-extension") and is_supported
-try_cython = key_or_false("build-cython-extensions") and is_supported and not is_pypy
+try_cython = key_or_false("build-cython-extensions") and is_supported
 
 build_concurrency = driver_project_data["build-concurrency"]
 

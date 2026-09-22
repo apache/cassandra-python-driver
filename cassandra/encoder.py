@@ -20,7 +20,6 @@ called on each query parameter.
 """
 
 import logging
-log = logging.getLogger(__name__)
 
 from binascii import hexlify
 from decimal import Decimal
@@ -34,6 +33,8 @@ import ipaddress
 
 from cassandra.util import (OrderedDict, OrderedMap, OrderedMapSerializedKey,
                             sortedset, Time, Date, Point, LineString, Polygon)
+
+log = logging.getLogger(__name__)
 
 
 def cql_quote(term):
@@ -173,7 +174,7 @@ class Encoder(object):
         is suitable for ``IN`` value lists.
         """
         return '(%s)' % ', '.join(self.mapping.get(type(v), self.cql_encode_object)(v)
-                                     for v in val)
+                                  for v in val)
 
     cql_encode_tuple = cql_encode_sequence
     """

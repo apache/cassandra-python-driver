@@ -2,15 +2,15 @@ import struct
 
 
 def body_and_tail(data):
-    l = len(data)
-    nblocks = l // 16
-    tail = l % 16
+    length = len(data)
+    nblocks = length // 16
+    tail = length % 16
     if nblocks:
         # we use '<', specifying little-endian byte order for data bigger than
         # a byte so behavior is the same on little- and big-endian platforms
-        return struct.unpack_from('<' + ('qq' * nblocks), data), struct.unpack_from('b' * tail, data, -tail), l
+        return struct.unpack_from('<' + ('qq' * nblocks), data), struct.unpack_from('b' * tail, data, -tail), length
     else:
-        return tuple(), struct.unpack_from('b' * tail, data, -tail), l
+        return tuple(), struct.unpack_from('b' * tail, data, -tail), length
 
 
 def rotl64(x, r):
@@ -107,6 +107,7 @@ def _murmur3(data):
     h1 += h2
 
     return truncate_int64(h1)
+
 
 try:
     from cassandra.cmurmur3 import murmur3

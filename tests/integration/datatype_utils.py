@@ -139,6 +139,7 @@ def get_sample_data():
 
     return sample_data
 
+
 SAMPLE_DATA = get_sample_data()
 
 

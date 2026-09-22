@@ -86,15 +86,6 @@ It might be also useful to learn about the different levels of identity verifica
 
 * `Using SSL in DSE drivers <https://docs.datastax.com/en/dse/6.7/dse-dev/datastax_enterprise/appDevGuide/sslDrivers.html>`_
 
-SSL with Twisted or Eventlet
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Twisted and Eventlet both use an alternative SSL implementation called pyOpenSSL, so if your `Cluster`'s connection class is
-:class:`~cassandra.io.twistedreactor.TwistedConnection` or :class:`~cassandra.io.eventletreactor.EventletConnection`, you must pass a
-`pyOpenSSL context <https://www.pyopenssl.org/en/stable/api/ssl.html#context-objects>`_ instead.
-An example is provided in these docs, and more details can be found in the
-`documentation <https://www.pyopenssl.org/en/stable/api/ssl.html#context-objects>`_.
-pyOpenSSL is not installed by the driver and must be installed separately.
-
 SSL Configuration Examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here, we'll describe the server and driver configuration necessary to set up SSL to meet various goals, such as the client verifying the server and the server verifying the client. We'll also include Python code demonstrating how to use servers and drivers configured in these ways.
@@ -267,32 +258,6 @@ The following driver code specifies that the connection should use two-way verif
 The driver uses ``SSLContext`` directly to give you many other options in configuring SSL. Consider reading the `Python SSL documentation <https://docs.python.org/library/ssl.html#ssl.SSLContext>`_
 for more details about ``SSLContext`` configuration.
 
-**Server verifies client and client verifies server using Twisted and pyOpenSSL**
-
-.. code-block:: python
-
-    from OpenSSL import SSL, crypto
-    from cassandra.cluster import Cluster
-    from cassandra.io.twistedreactor import TwistedConnection
-
-    ssl_context = SSL.Context(SSL.TLSv1_2_METHOD)
-    ssl_context.set_verify(SSL.VERIFY_PEER, callback=lambda _1, _2, _3, _4, ok: ok)
-    ssl_context.use_certificate_file('/path/to/client.crt_signed')
-    ssl_context.use_privatekey_file('/path/to/client.key')
-    ssl_context.load_verify_locations('/path/to/rootca.crt')
-
-    cluster = Cluster(
-        contact_points=['127.0.0.1'],
-        connection_class=TwistedConnection,
-        ssl_context=ssl_context,
-        ssl_options={'check_hostname': True}
-    )
-    session = cluster.connect()
-
-
-Connecting using Eventlet would look similar except instead of importing and using ``TwistedConnection``, you would
-import and use ``EventletConnection``, including the appropriate monkey-patching.
-
 Versions 3.16.0 and lower
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -324,12 +289,6 @@ This is only an example to show how to pass the ssl parameters. Consider reading
 the `python ssl documentation <https://docs.python.org/2/library/ssl.html#ssl.wrap_socket>`_ for
 your configuration. For further reading, Andrew Mussey has published a thorough guide on
 `Using SSL with the DataStax Python driver <http://blog.amussey.com/post/64036730812/cassandra-2-0-client-server-ssl-with-datastax-python>`_.
-
-SSL with Twisted
-++++++++++++++++
-
-In case the twisted event loop is used pyOpenSSL must be installed or an exception will be risen. Also
-to set the ``ssl_version`` and ``cert_reqs`` in ``ssl_opts`` the appropriate constants from pyOpenSSL are expected.
 
 DSE Authentication
 ------------------

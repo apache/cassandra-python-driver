@@ -67,15 +67,6 @@ try:
 except (ImportError, SyntaxError):
     pass
 
-have_twisted = False
-try:
-    from cassandra.io.twistedreactor import TwistedConnection
-    have_twisted = True
-    supported_reactors.append(TwistedConnection)
-except ImportError as exc:
-    log.exception("Error importing twisted")
-    pass
-
 KEYSPACE = "testkeyspace" + str(int(time.time()))
 TABLE = "testtable"
 
@@ -230,8 +221,6 @@ def parse_options():
                       help='only benchmark with asyncio connections')
     parser.add_option('--libev-only', action='store_true', dest='libev_only',
                       help='only benchmark with libev connections')
-    parser.add_option('--twisted-only', action='store_true', dest='twisted_only',
-                      help='only benchmark with Twisted connections')
     parser.add_option('-m', '--metrics', action='store_true', dest='enable_metrics',
                       help='enable and print metrics for operations')
     parser.add_option('-l', '--log-level', default='info',
@@ -271,11 +260,6 @@ def parse_options():
             log.error("libev is not available")
             sys.exit(1)
         options.supported_reactors = [LibevConnection]
-    elif options.twisted_only:
-        if not have_twisted:
-            log.error("Twisted is not available")
-            sys.exit(1)
-        options.supported_reactors = [TwistedConnection]
     else:
         options.supported_reactors = supported_reactors
         if not have_libev:

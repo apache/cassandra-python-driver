@@ -114,6 +114,10 @@ IO_dealloc(libevwrapper_IO *self) {
 };
 
 static void io_callback(struct ev_loop *loop, ev_io *watcher, int revents) {
+    if (!Py_IsInitialized()) {
+        return;
+    }
+
     libevwrapper_IO *self = watcher->data;
     PyObject *result;
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -348,6 +352,10 @@ Prepare_dealloc(libevwrapper_Prepare *self) {
 }
 
 static void prepare_callback(struct ev_loop *loop, ev_prepare *watcher, int revents) {
+    if (!Py_IsInitialized()) {
+        return;
+    }
+
     libevwrapper_Prepare *self = watcher->data;
     PyObject *result = NULL;
     PyGILState_STATE gstate;
@@ -466,6 +474,10 @@ Timer_dealloc(libevwrapper_Timer *self) {
 }
 
 static void timer_callback(struct ev_loop *loop, ev_timer *watcher, int revents) {
+    if (!Py_IsInitialized()) {
+        return;
+    }
+
     libevwrapper_Timer *self = watcher->data;
 
     PyObject *result = NULL;

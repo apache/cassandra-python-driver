@@ -96,7 +96,7 @@ it with the ``PROTOCOL_VERSION`` environment variable::
 
 Testing Multiple Python Versions
 --------------------------------
-Use tox to test all of Python 3.10 through 3.14 and pypy::
+Use tox to test all currently supported versions of the Python runtime::
 
     tox
 

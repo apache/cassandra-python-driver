@@ -61,6 +61,7 @@ class TestDatetime(BaseCassEngTestCase):
         class TZ(tzinfo):
             def utcoffset(self, date_time):
                 return timedelta(hours=-1)
+
             def dst(self, date_time):
                 return None
 
@@ -91,7 +92,7 @@ class TestDatetime(BaseCassEngTestCase):
         self.assertIsNone(dts[0][0])
 
     def test_datetime_invalid(self):
-        dt_value= 'INVALID'
+        dt_value = 'INVALID'
         with self.assertRaises(TypeError):
             self.DatetimeTest.objects.create(test_id=4, created_at=dt_value)
 
@@ -125,7 +126,7 @@ class TestDatetime(BaseCassEngTestCase):
             dt_truncated = datetime(2024, 12, 31, 10, 10, 10, 923000)
             self.DatetimeTest.objects.create(test_id=6, created_at=dt_value)
             dt2 = self.DatetimeTest.objects(test_id=6).first()
-            self.assertEqual(dt2.created_at,dt_truncated)
+            self.assertEqual(dt2.created_at, dt_truncated)
         finally:
             # We need to always return behavior to default
             DateTime.truncate_microseconds = False
@@ -191,7 +192,7 @@ class TestVarInt(BaseCassEngTestCase):
             self.VarIntTest.objects.create(test_id=0, bignum="not_a_number")
 
 
-class DataType():
+class DataType:
     @classmethod
     def setUpClass(cls):
         if PROTOCOL_VERSION < 4 or CASSANDRA_VERSION < Version("3.0"):
@@ -343,6 +344,7 @@ class TestBoolean(DataType, BaseCassEngTestCase):
             True
         )
         super(TestBoolean, cls).setUpClass()
+
 
 @greaterthanorequalcass3_11
 class TestDuration(DataType, BaseCassEngTestCase):
@@ -507,7 +509,7 @@ class TestTimeUUID(BaseCassEngTestCase):
 class TestInteger(BaseCassEngTestCase):
     class IntegerTest(Model):
 
-        test_id = UUID(primary_key=True, default=lambda:uuid4())
+        test_id = UUID(primary_key=True, default=lambda: uuid4())
         value = Integer(default=0, required=True)
 
     def test_default_zero_fields_validate(self):
@@ -519,8 +521,8 @@ class TestInteger(BaseCassEngTestCase):
 class TestBigInt(BaseCassEngTestCase):
     class BigIntTest(Model):
 
-        test_id = UUID(primary_key=True, default=lambda:uuid4())
-        value   = BigInt(default=0, required=True)
+        test_id = UUID(primary_key=True, default=lambda: uuid4())
+        value = BigInt(default=0, required=True)
 
     def test_default_zero_fields_validate(self):
         """ Tests that bigint columns with a default value of 0 validate """
@@ -611,10 +613,6 @@ class TestAscii(BaseCassEngTestCase):
 
         with self.assertRaises(ValidationError):
             Ascii().validate('Beyonc' + chr(233))
-
-        if sys.version_info < (3, 1):
-            with self.assertRaises(ValidationError):
-                Ascii().validate(u'Beyonc' + unichr(233))
 
     def test_unaltering_validation(self):
         """ Test the validation step doesn't re-interpret values. """
@@ -736,8 +734,6 @@ class TestText(BaseCassEngTestCase):
 
         Text().validate("!#$%&\'()*+,-./")
         Text().validate('Beyonc' + chr(233))
-        if sys.version_info < (3, 1):
-            Text().validate(u'Beyonc' + unichr(233))
 
     def test_unaltering_validation(self):
         """ Test the validation step doesn't re-interpret values. """
@@ -810,7 +806,7 @@ class TestTimeUUIDFromDatetime(BaseCassEngTestCase):
         from uuid import UUID
         assert isinstance(uuid, UUID)
 
-        ts = (uuid.time - 0x01b21dd213814000) / 1e7 # back to a timestamp
+        ts = (uuid.time - 0x01b21dd213814000) / 1e7  # back to a timestamp
         new_dt = datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
 
         # checks that we created a UUID1 with the proper timestamp

@@ -20,17 +20,12 @@ from ccmlib import common
 from cassandra.cluster import NoHostAvailable
 from cassandra.io.asyncorereactor import AsyncoreConnection
 
-from tests import is_monkey_patched
 from tests.integration import use_cluster, remove_cluster, TestCluster
 
-if is_monkey_patched():
-    LibevConnection = -1
-    AsyncoreConnection = -1
-else:
-    try:
-        from cassandra.io.libevreactor import LibevConnection
-    except ImportError:
-        LibevConnection = None
+try:
+    from cassandra.io.libevreactor import LibevConnection
+except ImportError:
+    LibevConnection = None
 
 import unittest
 

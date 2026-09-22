@@ -22,17 +22,16 @@ from random import randint, shuffle
 from threading import Lock
 import socket
 import warnings
+from cassandra import WriteType as WT
+from cassandra import ConsistencyLevel, OperationTimedOut
 
 log = logging.getLogger(__name__)
-
-from cassandra import WriteType as WT
 
 # This is done this way because WriteType was originally
 # defined here and in order not to break the API.
 # It may be removed in the next major.
 WriteType = WT
 
-from cassandra import ConsistencyLevel, OperationTimedOut
 
 class HostDistance(object):
     """
@@ -1186,6 +1185,7 @@ class NeverRetryPolicy(RetryPolicy):
 
 
 ColDesc = namedtuple('ColDesc', ['ks', 'table', 'col'])
+
 
 class ColumnEncryptionPolicy(object):
     """

@@ -215,6 +215,7 @@ class SaslAuthenticator(Authenticator):
     def evaluate_challenge(self, challenge):
         return self.sasl.process(challenge)
 
+
 # TODO remove me next major
 DSEPlainTextAuthProvider = PlainTextAuthProvider
 

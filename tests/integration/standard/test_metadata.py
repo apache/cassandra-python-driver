@@ -1087,14 +1087,6 @@ class TestCodeCoverage(unittest.TestCase):
         Test udt exports
         """
 
-        if PROTOCOL_VERSION < 3:
-            raise unittest.SkipTest(
-                "Protocol 3.0+ is required for UDT change events, currently testing against %r"
-                % (PROTOCOL_VERSION,))
-
-        if sys.version_info[0:2] != (2, 7):
-            raise unittest.SkipTest('This test compares static strings generated from dict items, which may change orders. Test with 2.7.')
-
         cluster = TestCluster()
         session = cluster.connect()
 
@@ -1591,7 +1583,7 @@ class FunctionMetadata(FunctionTest):
 
         with self.VerifiedFunction(self, **kwargs) as vf:
             fn_meta = self.keyspace_function_meta[vf.signature]
-            self.assertRegex(fn_meta.as_cql_query(), "CREATE FUNCTION.*%s\(\) .*" % kwargs['name'])
+            self.assertRegex(fn_meta.as_cql_query(), r"CREATE FUNCTION.*%s\(\) .*" % kwargs['name'])
 
     def test_functions_follow_keyspace_alter(self):
         """
@@ -1639,12 +1631,12 @@ class FunctionMetadata(FunctionTest):
         kwargs['called_on_null_input'] = True
         with self.VerifiedFunction(self, **kwargs) as vf:
             fn_meta = self.keyspace_function_meta[vf.signature]
-            self.assertRegex(fn_meta.as_cql_query(), "CREATE FUNCTION.*\) CALLED ON NULL INPUT RETURNS .*")
+            self.assertRegex(fn_meta.as_cql_query(), r"CREATE FUNCTION.*\) CALLED ON NULL INPUT RETURNS .*")
 
         kwargs['called_on_null_input'] = False
         with self.VerifiedFunction(self, **kwargs) as vf:
             fn_meta = self.keyspace_function_meta[vf.signature]
-            self.assertRegex(fn_meta.as_cql_query(), "CREATE FUNCTION.*\) RETURNS NULL ON NULL INPUT RETURNS .*")
+            self.assertRegex(fn_meta.as_cql_query(), r"CREATE FUNCTION.*\) RETURNS NULL ON NULL INPUT RETURNS .*")
 
 
 class AggregateMetadata(FunctionTest):

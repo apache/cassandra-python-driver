@@ -5,8 +5,8 @@ requires = ["setuptools", "Cython>=3.0", "tomli"]
 [project]
 name = "cassandra-driver"
 description = "Apache Cassandra Python Driver"
-version = "3.30.0"
-dependencies = ['geomet>=1.1', "Deprecated>=1.3.1"]
+version = "3.30.1"
+dependencies = ['geomet>=1.1']
 readme = "README.rst"
 authors = [{name = "DataStax"}]
 license = "Apache-2.0"
@@ -25,7 +25,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
@@ -43,7 +42,7 @@ changelog = "https://github.com/apache/cassandra-python-driver/blob/trunk/CHANGE
 
 [tool.setuptools.packages.find]
 include = ['cassandra', 'cassandra.io', 'cassandra.cqlengine', 'cassandra.graph',
-'cassandra.datastax', 'cassandra.datastax.insights', 'cassandra.datastax.graph',
+'cassandra.datastax', 'cassandra.datastax.graph',
 'cassandra.datastax.graph.fluent', 'cassandra.datastax.cloud',
 "cassandra.column_encryption"]
 

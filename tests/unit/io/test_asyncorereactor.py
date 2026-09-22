@@ -27,17 +27,13 @@ try:
 except DependencyException:
     AsyncoreConnection = None
 
-from tests import is_monkey_patched
-from tests.unit.io.utils import ReactorTestMixin, TimerTestMixin, noop_if_monkey_patched
+from tests.unit.io.utils import ReactorTestMixin, TimerTestMixin
 
 
 class AsyncorePatcher(unittest.TestCase):
 
     @classmethod
-    @noop_if_monkey_patched
     def setUpClass(cls):
-        if is_monkey_patched():
-            return
         AsyncoreConnection.initialize_reactor()
 
         socket_patcher = patch('socket.socket', spec=socket.socket)
@@ -56,7 +52,6 @@ class AsyncorePatcher(unittest.TestCase):
         cls.patchers = (socket_patcher, channel_patcher)
 
     @classmethod
-    @noop_if_monkey_patched
     def tearDownClass(cls):
         for p in cls.patchers:
             try:
@@ -72,8 +67,7 @@ class AsyncoreConnectionTest(ReactorTestMixin, AsyncorePatcher):
     socket_attr_name = 'socket'
 
     def setUp(self):
-        if is_monkey_patched():
-            raise unittest.SkipTest("Can't test asyncore with monkey patching")
+        super(AsyncoreConnectionTest, self).setUp()
 
 
 @unittest.skipUnless(has_asyncore, "asyncore has been removed in Python 3.12")
@@ -89,6 +83,4 @@ class TestAsyncoreTimer(TimerTestMixin, AsyncorePatcher):
         return asyncorereactor._global_loop._timers
 
     def setUp(self):
-        if is_monkey_patched():
-            raise unittest.SkipTest("Can't test asyncore with monkey patching")
         super(TestAsyncoreTimer, self).setUp()

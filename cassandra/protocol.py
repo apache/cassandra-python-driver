@@ -54,6 +54,7 @@ class NotSupportedError(Exception):
 class InternalError(Exception):
     pass
 
+
 ColumnMetadata = namedtuple("ColumnMetadata", ['keyspace_name', 'table_name', 'name', 'type'])
 
 HEADER_DIRECTION_TO_CLIENT = 0x80
@@ -1175,8 +1176,8 @@ class _ProtocolHandler(object):
         :param decompressor: optional decompression function to inflate the body
         :return: a message decoded from the body and frame attributes
         """
-        if (not ProtocolVersion.has_checksumming_support(protocol_version) and
-                flags & COMPRESSED_FLAG):
+        if (not ProtocolVersion.has_checksumming_support(protocol_version)
+                and flags & COMPRESSED_FLAG):
             if decompressor is None:
                 raise RuntimeError("No de-compressor available for compressed frame!")
             body = decompressor(body)

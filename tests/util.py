@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
 import time
 from functools import wraps
 
@@ -54,7 +54,7 @@ def wait_until_not_raised(condition, delay, max_attempts):
         return True, result
 
     attempt = 0
-    while attempt < (max_attempts-1):
+    while attempt < (max_attempts - 1):
         attempt += 1
         success, result = wrapped_condition()
         if success:

@@ -225,7 +225,7 @@ class LibevLoop(object):
 
 
 _global_loop = None
-atexit.register(partial(_cleanup, _global_loop))
+atexit.register(lambda: _cleanup(_global_loop))
 
 
 class LibevConnection(Connection):

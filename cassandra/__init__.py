@@ -17,14 +17,17 @@
 import logging
 import importlib.metadata
 
+
 class NullHandler(logging.Handler):
 
     def emit(self, record):
         pass
 
+
 logging.getLogger('cassandra').addHandler(NullHandler())
 
 __version__ = importlib.metadata.version('cassandra-driver')
+
 
 class ConsistencyLevel(object):
     """
@@ -417,10 +420,10 @@ class Unavailable(RequestExecutionException):
         self.consistency = consistency
         self.required_replicas = required_replicas
         self.alive_replicas = alive_replicas
-        Exception.__init__(self, summary_message + ' info=' +
-                           repr({'consistency': consistency_value_to_name(consistency),
-                                 'required_replicas': required_replicas,
-                                 'alive_replicas': alive_replicas}))
+        Exception.__init__(self, summary_message + ' info='
+                           + repr({'consistency': consistency_value_to_name(consistency),
+                                   'required_replicas': required_replicas,
+                                   'alive_replicas': alive_replicas}))
 
 
 class Timeout(RequestExecutionException):
@@ -632,7 +635,7 @@ class RequestValidationException(DriverException):
 
 class ConfigurationException(RequestValidationException):
     """
-    Server indicated request errro due to current configuration
+    Server indicated request error due to current configuration
     """
     pass
 
@@ -728,6 +731,7 @@ class UnresolvableContactPoints(DriverException):
     contact points, only when lookup fails for all hosts
     """
     pass
+
 
 class DependencyException(Exception):
     """

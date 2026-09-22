@@ -7,7 +7,7 @@ except (ImportError, SyntaxError):
     AsyncioConnection = None
     ASYNCIO_AVAILABLE = False
 
-from tests import is_monkey_patched, connection_class
+from tests import connection_class
 from tests.unit.io.utils import TimerCallback, TimerTestMixin
 
 from unittest.mock import patch
@@ -15,12 +15,10 @@ from unittest.mock import patch
 import unittest
 import time
 
-skip_me = (is_monkey_patched() or
-           (not ASYNCIO_AVAILABLE) or
+skip_me = ( not ASYNCIO_AVAILABLE or
            (connection_class is not AsyncioConnection))
 
 
-@unittest.skipIf(is_monkey_patched(), 'runtime is monkey patched for another reactor')
 @unittest.skipIf(connection_class is not AsyncioConnection,
                  'not running asyncio tests; current connection_class is {}'.format(connection_class))
 @unittest.skipUnless(ASYNCIO_AVAILABLE, "asyncio is not available for this runtime")

@@ -17,12 +17,6 @@ provide this pattern with a synchronous API and tunable concurrency.
 Due to the GIL and limited concurrency, the driver can become CPU-bound pretty quickly. The sections below
 discuss further runtime and design considerations for mitigating this limitation.
 
-PyPy
-----
-`PyPy <http://pypy.org>`_ is an alternative Python runtime which uses a JIT compiler to
-reduce CPU consumption. This leads to a huge improvement in the driver performance,
-more than doubling throughput for many workloads.
-
 Cython Extensions
 -----------------
 `Cython <http://cython.org/>`_ is an optimizing compiler and language that can be used to compile the core files and

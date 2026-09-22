@@ -23,6 +23,7 @@ def _make_packer(format_string):
     unpack = lambda s: packer.unpack(s)[0]
     return pack, unpack
 
+
 int64_pack, int64_unpack = _make_packer('>q')
 int32_pack, int32_unpack = _make_packer('>i')
 int16_pack, int16_unpack = _make_packer('>h')
@@ -113,6 +114,7 @@ def vints_unpack(term):  # noqa
 
     return tuple(values)
 
+
 def vints_pack(values):
     revbytes = bytearray()
     values = [int(v) for v in values[::-1]]
@@ -127,7 +129,7 @@ def vints_pack(values):
             # i.e. with 1 extra byte, the first byte needs to be something like '10XXXXXX' # 2 bits reserved
             # i.e. with 8 extra bytes, the first byte needs to be '11111111'  # 8 bits reserved
             reserved_bits = num_extra_bytes + 1
-            while num_bits > (8-(reserved_bits)):
+            while num_bits > (8 - (reserved_bits)):
                 num_extra_bytes += 1
                 num_bits -= 8
                 reserved_bits = min(num_extra_bytes + 1, 8)
@@ -145,20 +147,22 @@ def vints_pack(values):
     revbytes.reverse()
     return bytes(revbytes)
 
+
 def uvint_unpack(bytes):
     first_byte = bytes[0]
 
     if (first_byte & 128) == 0:
-        return (first_byte,1)
+        return (first_byte, 1)
 
     num_extra_bytes = 8 - (~first_byte & 0xff).bit_length()
     rv = first_byte & (0xff >> num_extra_bytes)
-    for idx in range(1,num_extra_bytes + 1):
+    for idx in range(1, num_extra_bytes + 1):
         new_byte = bytes[idx]
         rv <<= 8
         rv |= new_byte & 0xff
 
     return (rv, num_extra_bytes + 1)
+
 
 def uvint_pack(val):
     rv = bytearray()
@@ -172,7 +176,7 @@ def uvint_pack(val):
         # i.e. with 1 extra byte, the first byte needs to be something like '10XXXXXX' # 2 bits reserved
         # i.e. with 8 extra bytes, the first byte needs to be '11111111'  # 8 bits reserved
         reserved_bits = num_extra_bytes + 1
-        while num_bits > (8-(reserved_bits)):
+        while num_bits > (8 - (reserved_bits)):
             num_extra_bytes += 1
             num_bits -= 8
             reserved_bits = min(num_extra_bytes + 1, 8)

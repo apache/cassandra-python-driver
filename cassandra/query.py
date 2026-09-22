@@ -85,39 +85,6 @@ def tuple_factory(colnames, rows):
     """
     return rows
 
-class PseudoNamedTupleRow(object):
-    """
-    Helper class for pseudo_named_tuple_factory. These objects provide an
-    __iter__ interface, as well as index- and attribute-based access to values,
-    but otherwise do not attempt to implement the full namedtuple or iterable
-    interface.
-    """
-    def __init__(self, ordered_dict):
-        self._dict = ordered_dict
-        self._tuple = tuple(ordered_dict.values())
-
-    def __getattr__(self, name):
-        return self._dict[name]
-
-    def __getitem__(self, idx):
-        return self._tuple[idx]
-
-    def __iter__(self):
-        return iter(self._tuple)
-
-    def __repr__(self):
-        return '{t}({od})'.format(t=self.__class__.__name__,
-                                  od=self._dict)
-
-
-def pseudo_namedtuple_factory(colnames, rows):
-    """
-    Returns each row as a :class:`.PseudoNamedTupleRow`. This is the fallback
-    factory for cases where :meth:`.named_tuple_factory` fails to create rows.
-    """
-    return [PseudoNamedTupleRow(od)
-            for od in ordered_dict_factory(colnames, rows)]
-
 
 def named_tuple_factory(colnames, rows):
     """
@@ -151,20 +118,6 @@ def named_tuple_factory(colnames, rows):
     clean_column_names = map(_clean_column_name, colnames)
     try:
         Row = namedtuple('Row', clean_column_names)
-    except SyntaxError:
-        warnings.warn(
-            "Failed creating namedtuple for a result because there were too "
-            "many columns. This is due to a Python limitation that affects "
-            "namedtuple in Python 3.0-3.6 (see issue18896). The row will be "
-            "created with {substitute_factory_name}, which lacks some namedtuple "
-            "features and is slower. To avoid slower performance accessing "
-            "values on row objects, Upgrade to Python 3.7, or use a different "
-            "row factory. (column names: {colnames})".format(
-                substitute_factory_name=pseudo_namedtuple_factory.__name__,
-                colnames=colnames
-            )
-        )
-        return pseudo_namedtuple_factory(colnames, rows)
     except Exception:
         clean_column_names = list(map(_clean_column_name, colnames))  # create list because py3 map object will be consumed by first attempt
         log.warning("Failed creating named tuple for results with column names %s (cleaned: %s) "
@@ -293,8 +246,8 @@ class Statement(object):
 
     def _key_parts_packed(self, parts):
         for p in parts:
-            l = len(p)
-            yield struct.pack(">H%dsB" % l, l, p, 0)
+            length = len(p)
+            yield struct.pack(">H%dsB" % length, length, p, 0)
 
     def _get_routing_key(self):
         return self._routing_key
@@ -328,8 +281,8 @@ class Statement(object):
         return self._serial_consistency_level
 
     def _set_serial_consistency_level(self, serial_consistency_level):
-        if (serial_consistency_level is not None and
-                not ConsistencyLevel.is_serial(serial_consistency_level)):
+        if (serial_consistency_level is not None
+                and not ConsistencyLevel.is_serial(serial_consistency_level)):
             raise ValueError(
                 "serial_consistency_level must be either ConsistencyLevel.SERIAL "
                 "or ConsistencyLevel.LOCAL_SERIAL")
@@ -432,7 +385,7 @@ class PreparedStatement(object):
        <b>A note about <code>*</code> in prepared statements</b>
     """
 
-    column_metadata = None  #TODO: make this bind_metadata in next major
+    column_metadata = None  # TODO: make this bind_metadata in next major
     retry_policy = None
     consistency_level = None
     custom_payload = None
@@ -1106,8 +1059,8 @@ class HostTargetingStatement(object):
     it usable in a targeted LBP without modifying the user's statement.
     """
     def __init__(self, inner_statement, target_host):
-            self.__class__ = type(inner_statement.__class__.__name__,
-                                  (self.__class__, inner_statement.__class__),
-                                  {})
-            self.__dict__ = inner_statement.__dict__
-            self.target_host = target_host
+        self.__class__ = type(inner_statement.__class__.__name__,
+                              (self.__class__, inner_statement.__class__),
+                              {})
+        self.__dict__ = inner_statement.__dict__
+        self.target_host = target_host

@@ -28,12 +28,6 @@ from threading import RLock
 import struct
 import random
 
-murmur3 = None
-try:
-    from cassandra.murmur3 import murmur3
-except ImportError as e:
-    pass
-
 from cassandra import SignatureDescriptor, ConsistencyLevel, InvalidRequest, Unauthorized
 import cassandra.cqltypes as types
 from cassandra.encoder import Encoder
@@ -43,6 +37,12 @@ from cassandra.query import dict_factory, bind_params
 from cassandra.util import OrderedDict, Version
 from cassandra.pool import HostDistance
 from cassandra.connection import EndPoint
+
+murmur3 = None
+try:
+    from cassandra.murmur3 import murmur3
+except ImportError as e:
+    pass
 
 log = logging.getLogger(__name__)
 
@@ -351,8 +351,8 @@ class Metadata(object):
 
     def _get_host_by_address(self, address, port=None):
         for host in self._hosts.values():
-            if (host.broadcast_rpc_address == address and
-                    (port is None or host.broadcast_rpc_port is None or host.broadcast_rpc_port == port)):
+            if (host.broadcast_rpc_address == address
+                    and (port is None or host.broadcast_rpc_port is None or host.broadcast_rpc_port == port)):
                 return host
 
         return None
@@ -384,7 +384,6 @@ class ReplicationStrategyTypeType(type):
         if not name.startswith('_'):
             _replication_strategies[name] = cls
         return cls
-
 
 
 class _ReplicationStrategy(object, metaclass=ReplicationStrategyTypeType):
@@ -436,9 +435,9 @@ class _UnknownStrategy(ReplicationStrategy):
         self.options_map['class'] = self.name
 
     def __eq__(self, other):
-        return (isinstance(other, _UnknownStrategy) and
-                self.name == other.name and
-                self.options_map == other.options_map)
+        return (isinstance(other, _UnknownStrategy)
+                and self.name == other.name
+                and self.options_map == other.options_map)
 
     def export_for_schema(self):
         """
@@ -626,7 +625,7 @@ class NetworkTopologyStrategy(ReplicationStrategy):
                 racks_this_dc = dc_racks[dc]
                 hosts_this_dc = len(hosts_per_dc[dc])
 
-                for token_offset_index in range(index, index+num_tokens):
+                for token_offset_index in range(index, index + num_tokens):
                     if token_offset_index >= len(token_offsets):
                         token_offset_index = token_offset_index - len(token_offsets)
 
@@ -789,16 +788,16 @@ class KeyspaceMetadata(object):
         other_tables = [t for t in self.tables.values() if t not in tables_with_vertex]
 
         cql = "\n\n".join(
-            [self.as_cql_query() + ';'] +
-            self.user_type_strings() +
-            [f.export_as_string() for f in self.functions.values()] +
-            [a.export_as_string() for a in self.aggregates.values()] +
-            [t.export_as_string() for t in tables_with_vertex + other_tables])
+            [self.as_cql_query() + ';']
+            + self.user_type_strings()
+            + [f.export_as_string() for f in self.functions.values()]
+            + [a.export_as_string() for a in self.aggregates.values()]
+            + [t.export_as_string() for t in tables_with_vertex + other_tables])
 
         if self._exc_info:
             import traceback
             ret = "/*\nWarning: Keyspace %s is incomplete because of an error processing metadata.\n" % \
-                  (self.name)
+                  self.name
             for line in traceback.format_exception(*self._exc_info):
                 ret += line
             ret += "\nApproximate structure, for reference:\n(this should not be used to reproduce this schema)\n\n%s\n*/" % cql
@@ -1272,9 +1271,9 @@ class TableMetadata(object):
         if comparator:
             # no compact storage with more than one column beyond PK if there
             # are clustering columns
-            incompatible = (self.is_compact_storage and
-                            len(self.columns) > len(self.primary_key) + 1 and
-                            len(self.clustering_key) >= 1)
+            incompatible = (self.is_compact_storage
+                            and len(self.columns) > len(self.primary_key) + 1
+                            and len(self.clustering_key) >= 1)
 
             return not incompatible
         return True
@@ -1864,7 +1863,7 @@ class MD5Token(HashToken):
     def hash_fn(cls, key):
         if isinstance(key, str):
             key = key.encode('UTF-8')
-        return abs(varint_unpack(md5(key).digest()))
+        return abs(varint_unpack(md5(key, usedforsecurity=False).digest()))
 
 
 class BytesToken(Token):
@@ -1875,9 +1874,6 @@ class BytesToken(Token):
     @classmethod
     def from_string(cls, token_string):
         """ `token_string` should be the string representation from the server. """
-        # unhexlify works fine with unicode input in everythin but pypy3, where it Raises "TypeError: 'str' does not support the buffer interface"
-        if isinstance(token_string, str):
-            token_string = token_string.encode('ascii')
         # The BOP stores a hex string
         return cls(unhexlify(token_string))
 
@@ -2188,8 +2184,8 @@ class SchemaParserV22(_SchemaParser):
                     is_compact = False
                     has_value = False
                     clustering_size = num_column_name_components - 2
-                elif (len(column_aliases) == num_column_name_components - 1 and
-                      issubclass(last_col, types.UTF8Type)):
+                elif (len(column_aliases) == num_column_name_components - 1
+                      and issubclass(last_col, types.UTF8Type)):
                     # aliases?
                     is_compact = False
                     has_value = False
@@ -2525,7 +2521,7 @@ class SchemaParserV3(SchemaParserV22):
 
     def get_table(self, keyspaces, keyspace, table):
         cl = ConsistencyLevel.ONE
-        where_clause = bind_params(" WHERE keyspace_name = %%s AND %s = %%s" % (self._table_name_col), (keyspace, table), _encoder)
+        where_clause = bind_params(" WHERE keyspace_name = %%s AND %s = %%s" % self._table_name_col, (keyspace, table), _encoder)
         cf_query = QueryMessage(query=self._SELECT_TABLES + where_clause, consistency_level=cl)
         col_query = QueryMessage(query=self._SELECT_COLUMNS + where_clause, consistency_level=cl)
         indexes_query = QueryMessage(query=self._SELECT_INDEXES + where_clause, consistency_level=cl)
@@ -2752,8 +2748,7 @@ class SchemaParserDSE60(SchemaParserV3):
     """
     For DSE 6.0+
     """
-    recognized_table_options = (SchemaParserV3.recognized_table_options +
-                                ("nodesync",))
+    recognized_table_options = (SchemaParserV3.recognized_table_options + ("nodesync",))
 
 
 class SchemaParserV4(SchemaParserV3):
@@ -2899,8 +2894,7 @@ class SchemaParserDSE67(SchemaParserV4):
     """
     For DSE 6.7+
     """
-    recognized_table_options = (SchemaParserV4.recognized_table_options +
-                                ("nodesync",))
+    recognized_table_options = (SchemaParserV4.recognized_table_options + ("nodesync",))
 
 
 class SchemaParserDSE68(SchemaParserDSE67):
@@ -2926,7 +2920,7 @@ class SchemaParserDSE68(SchemaParserDSE67):
     def get_table(self, keyspaces, keyspace, table):
         table_meta = super(SchemaParserDSE68, self).get_table(keyspaces, keyspace, table)
         cl = ConsistencyLevel.ONE
-        where_clause = bind_params(" WHERE keyspace_name = %%s AND %s = %%s" % (self._table_name_col), (keyspace, table), _encoder)
+        where_clause = bind_params(" WHERE keyspace_name = %%s AND %s = %%s" % self._table_name_col, (keyspace, table), _encoder)
         vertices_query = QueryMessage(query=self._SELECT_VERTICES + where_clause, consistency_level=cl)
         edges_query = QueryMessage(query=self._SELECT_EDGES + where_clause, consistency_level=cl)
 
@@ -3319,6 +3313,8 @@ class RLACTableExtension(RegisteredTableExtension):
         return "RESTRICT ROWS ON %s.%s USING %s;" % (protect_name(table_meta.keyspace_name),
                                                      protect_name(table_meta.name),
                                                      protect_name(ext_blob.decode('utf-8')))
+
+
 NO_VALID_REPLICA = object()
 
 

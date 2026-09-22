@@ -29,7 +29,9 @@ log = logging.getLogger(__name__)
 
 ExecutionResult = namedtuple('ExecutionResult', ['success', 'result_or_exc'])
 
-def execute_concurrent(session, statements_and_parameters, concurrency=100, raise_on_first_error=True, results_generator=False, execution_profile=EXEC_PROFILE_DEFAULT):
+
+def execute_concurrent(session, statements_and_parameters, concurrency=100, raise_on_first_error=True,
+                       results_generator=False, execution_profile=EXEC_PROFILE_DEFAULT):
     """
     See :meth:`.Session.execute_concurrent`.
     """
@@ -159,7 +161,6 @@ class ConcurrentExecutorListResults(_ConcurrentExecutor):
         if self._exception and self._fail_fast:  # raise the exception even if there was no wait
             raise self._exception
         return [r[1] for r in sorted(self._results_queue)]
-
 
 
 def execute_concurrent_with_args(session, statement, parameters, *args, **kwargs):

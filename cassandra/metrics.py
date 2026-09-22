@@ -130,23 +130,25 @@ class Metrics(object):
         self.stats_name = 'cassandra-{0}'.format(str(self._stats_counter))
         Metrics._stats_counter += 1
         self.stats = scales.collection(self.stats_name,
-            scales.PmfStat('request_timer'),
-            scales.IntStat('connection_errors'),
-            scales.IntStat('write_timeouts'),
-            scales.IntStat('read_timeouts'),
-            scales.IntStat('unavailables'),
-            scales.IntStat('other_errors'),
-            scales.IntStat('retries'),
-            scales.IntStat('ignores'),
-            scales.IntStat('graceful_disconnects'),
+                                       scales.PmfStat('request_timer'),
+                                       scales.IntStat('connection_errors'),
+                                       scales.IntStat('write_timeouts'),
+                                       scales.IntStat('read_timeouts'),
+                                       scales.IntStat('unavailables'),
+                                       scales.IntStat('other_errors'),
+                                       scales.IntStat('retries'),
+                                       scales.IntStat('ignores'),
+                                       scales.IntStat('graceful_disconnects'),
 
-            # gauges
-            scales.Stat('known_hosts',
-                lambda: len(cluster_proxy.metadata.all_hosts())),
-            scales.Stat('connected_to',
-                lambda: len(set(chain.from_iterable(s._pools.keys() for s in cluster_proxy.sessions)))),
-            scales.Stat('open_connections',
-                lambda: sum(sum(p.open_count for p in s._pools.values()) for s in cluster_proxy.sessions)))
+                                       # gauges
+                                       scales.Stat('known_hosts',
+                                                   lambda: len(cluster_proxy.metadata.all_hosts())),
+                                       scales.Stat('connected_to',
+                                                   lambda: len(set(chain.from_iterable(
+                                                       s._pools.keys() for s in cluster_proxy.sessions)))),
+                                       scales.Stat('open_connections',
+                                                   lambda: sum(sum(p.open_count for p in s._pools.values()) for s in
+                                                               cluster_proxy.sessions)))
 
         # TODO, to be removed in 4.0
         # /cassandra contains the metrics of the first cluster registered

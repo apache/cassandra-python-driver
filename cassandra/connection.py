@@ -29,10 +29,7 @@ import ssl
 import weakref
 
 
-if 'gevent.monkey' in sys.modules:
-    from gevent.queue import Queue, Empty
-else:
-    from queue import Queue, Empty  # noqa
+from queue import Queue, Empty  # noqa
 
 from cassandra import ConsistencyLevel, AuthenticationFailed, OperationTimedOut, ProtocolVersion
 from cassandra.marshal import int32_pack
@@ -200,8 +197,8 @@ class DefaultEndPoint(EndPoint):
         return self._address, self._port
 
     def __eq__(self, other):
-        return isinstance(other, DefaultEndPoint) and \
-               self.address == other.address and self.port == other.port
+        return isinstance(other, DefaultEndPoint)\
+            and self.address == other.address and self.port == other.port
 
     def __hash__(self):
         return hash((self.address, self.port))
@@ -220,8 +217,7 @@ class DefaultEndPointFactory(EndPointFactory):
 
     port = None
     """
-    If no port is discovered in the row, this is the default port
-    used for endpoint creation. 
+    If no port is discovered in the row, this is the default port used for endpoint creation.
     """
 
     def __init__(self, port=None):
@@ -285,16 +281,16 @@ class SniEndPoint(EndPoint):
                                   socket.AF_UNSPEC, socket.SOCK_STREAM)
 
     def __eq__(self, other):
-        return (isinstance(other, SniEndPoint) and
-                self.address == other.address and self.port == other.port and
-                self._server_name == other._server_name)
+        return (isinstance(other, SniEndPoint)
+                and self.address == other.address and self.port == other.port
+                and self._server_name == other._server_name)
 
     def __hash__(self):
         return hash((self.address, self.port, self._server_name))
 
     def __lt__(self, other):
-        return ((self.address, self.port, self._server_name) <
-                (other.address, other.port, self._server_name))
+        return ((self.address, self.port, self._server_name)
+                < (other.address, other.port, self._server_name))
 
     def __str__(self):
         return str("%s:%d:%s" % (self.address, self.port, self._server_name))
@@ -354,8 +350,8 @@ class UnixSocketEndPoint(EndPoint):
         return self.address, None
 
     def __eq__(self, other):
-        return (isinstance(other, UnixSocketEndPoint) and
-                self._unix_socket_path == other._unix_socket_path)
+        return (isinstance(other, UnixSocketEndPoint)
+                and self._unix_socket_path == other._unix_socket_path)
 
     def __hash__(self):
         return hash(self._unix_socket_path)
@@ -381,12 +377,12 @@ class _Frame(object):
 
     def __eq__(self, other):  # facilitates testing
         if isinstance(other, _Frame):
-            return (self.version == other.version and
-                    self.flags == other.flags and
-                    self.stream == other.stream and
-                    self.opcode == other.opcode and
-                    self.body_offset == other.body_offset and
-                    self.end_pos == other.end_pos)
+            return (self.version == other.version
+                    and self.flags == other.flags
+                    and self.stream == other.stream
+                    and self.opcode == other.opcode
+                    and self.body_offset == other.body_offset
+                    and self.end_pos == other.end_pos)
         return NotImplemented
 
     def __str__(self):
@@ -650,7 +646,7 @@ class _ConnectionIOBuffer(object):
 
     @property
     def has_consumed_segment(self):
-        return self._segment_consumed;
+        return self._segment_consumed
 
     def readable_io_bytes(self):
         return self.io_buffer.tell()
@@ -724,7 +720,7 @@ class Connection(object):
     # If the number of orphaned streams reaches this threshold, this connection
     # will become marked and will be replaced with a new connection by the
     # owning pool (currently, only HostConnection supports this)
-    orphaned_threshold = 3  * max_in_flight // 4
+    orphaned_threshold = 3 * max_in_flight // 4
 
     is_defunct = False
     is_closed = False
@@ -882,7 +878,7 @@ class Connection(object):
 
         # Extract a subset of names from self.ssl_options which apply to SSLContext creation
         ssl_context_opt_names = ['ssl_version', 'cert_reqs', 'check_hostname', 'keyfile', 'certfile', 'ca_certs', 'ciphers']
-        opts = {k:self.ssl_options.get(k, None) for k in ssl_context_opt_names if k in self.ssl_options}
+        opts = {k: self.ssl_options.get(k, None) for k in ssl_context_opt_names if k in self.ssl_options}
 
         # Python >= 3.10 requires either PROTOCOL_TLS_CLIENT or PROTOCOL_TLS_SERVER, so we'll get ahead of things by always
         # being explicit
@@ -910,11 +906,11 @@ class Connection(object):
         # Extract a subset of names from self.ssl_options which apply to SSLContext.wrap_socket (or at least the parts
         # of it that don't involve building an SSLContext under the covers)
         wrap_socket_opt_names = ['server_side', 'do_handshake_on_connect', 'suppress_ragged_eofs', 'server_hostname']
-        opts = {k:self.ssl_options.get(k, None) for k in wrap_socket_opt_names if k in self.ssl_options}
+        opts = {k: self.ssl_options.get(k, None) for k in wrap_socket_opt_names if k in self.ssl_options}
 
         # PYTHON-1186: set the server_hostname only if the SSLContext has
         # check_hostname enabled, and it is not already provided by the EndPoint ssl options
-        #opts['server_hostname'] = self.endpoint.address
+        # opts['server_hostname'] = self.endpoint.address
         if (self.ssl_context.check_hostname and 'server_hostname' not in opts):
             server_hostname = self.endpoint.address
             opts['server_hostname'] = server_hostname
@@ -1408,8 +1404,8 @@ class Connection(object):
         self._compressor = None
         compression_type = None
         if self.compression:
-            overlap = (set(locally_supported_compressions.keys()) &
-                       set(remote_supported_compressions))
+            overlap = (set(locally_supported_compressions.keys())
+                       & set(remote_supported_compressions))
             if len(overlap) == 0:
                 log.debug("No available compression types supported on both ends."
                           " locally supported: %r. remotely supported: %r",
@@ -1434,8 +1430,8 @@ class Connection(object):
 
                 # If snappy compression is selected with v5+checksumming, the connection
                 # will fail with OTO. Only lz4 is supported
-                if (compression_type == 'snappy' and
-                        ProtocolVersion.has_checksumming_support(self.protocol_version)):
+                if (compression_type == 'snappy'
+                        and ProtocolVersion.has_checksumming_support(self.protocol_version)):
                     log.debug("Snappy compression is not supported with protocol version %s and "
                               "checksumming. Consider installing lz4. Disabling compression.", self.protocol_version)
                     compression_type = None

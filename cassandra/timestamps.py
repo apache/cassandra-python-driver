@@ -25,6 +25,7 @@ from threading import Lock
 
 log = logging.getLogger(__name__)
 
+
 class MonotonicTimestampGenerator(object):
     """
     An object that, when called, returns ``int(time.time() * 1e6)`` when
@@ -98,9 +99,9 @@ class MonotonicTimestampGenerator(object):
         diff = self.last - now
         since_last_warn = now - self._last_warn
 
-        warn = (self.warn_on_drift and
-                (diff >= self.warning_threshold * 1e6) and
-                (since_last_warn >= self.warning_interval * 1e6))
+        warn = (self.warn_on_drift
+                and (diff >= self.warning_threshold * 1e6)
+                and (since_last_warn >= self.warning_interval * 1e6))
         if warn:
             log.warning(
                 "Clock skew detected: current tick ({now}) was {diff} "

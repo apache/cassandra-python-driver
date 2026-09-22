@@ -61,7 +61,7 @@ MULTIDC_CLUSTER_NAME = 'multidc_test_cluster'
 #
 # TODO: In the future we may want to make this configurable, but this should only apply
 # if a non-standard port were specified when starting up the cluster.
-DEFAULT_SINGLE_INTERFACE_PORT=9046
+DEFAULT_SINGLE_INTERFACE_PORT = 9046
 
 CCM_CLUSTER = None
 
@@ -168,6 +168,7 @@ def _get_dse_version_from_cass(cass_version):
         dse_ver = "2.1"
     return dse_ver
 
+
 USE_CASS_EXTERNAL = bool(os.getenv('USE_CASS_EXTERNAL', False))
 KEEP_TEST_CLUSTER = bool(os.getenv('KEEP_TEST_CLUSTER', False))
 SIMULACRON_JAR = os.getenv('SIMULACRON_JAR', None)
@@ -271,7 +272,7 @@ def get_supported_protocol_versions():
     elif CASSANDRA_VERSION >= Version('3.0'):
         return (3, 4)
     elif CASSANDRA_VERSION >= Version('2.2'):
-        return (1,2, 3, 4)
+        return (1, 2, 3, 4)
     elif CASSANDRA_VERSION >= Version('2.1'):
         return (1, 2, 3)
     elif CASSANDRA_VERSION >= Version('2.0'):
@@ -333,6 +334,7 @@ def local_decorator_creator():
 
     return _id_and_mark
 
+
 local = local_decorator_creator()
 notprotocolv1 = unittest.skipUnless(PROTOCOL_VERSION > 1, 'Protocol v1 not supported')
 lessthenprotocolv4 = unittest.skipUnless(PROTOCOL_VERSION < 4, 'Protocol versions 4 or greater not supported')
@@ -360,7 +362,6 @@ lessthandse51 = unittest.skipUnless(DSE_VERSION and DSE_VERSION < Version('5.1')
 lessthandse60 = unittest.skipUnless(DSE_VERSION and DSE_VERSION < Version('6.0'), "DSE version less than 6.0 required")
 lessthandse69 = unittest.skipUnless(DSE_VERSION and DSE_VERSION < Version('6.9'), "DSE version less than 6.9 required")
 
-pypy = unittest.skipUnless(platform.python_implementation() == "PyPy", "Test is skipped unless it's on PyPy")
 requiresmallclockgranularity = unittest.skipIf("Windows" in platform.system() or "asyncore" in EVENT_LOOP_MANAGER,
                                                "This test is not suitible for environments with large clock granularity")
 requiressimulacron = unittest.skipIf(SIMULACRON_JAR is None or CASSANDRA_VERSION < Version("2.1"), "Simulacron jar hasn't been specified or C* version is 2.0")
@@ -369,7 +370,8 @@ notdse = unittest.skipIf(DSE_VERSION, "DSE not supported")
 requiredse = unittest.skipUnless(DSE_VERSION, "DSE required")
 requirescloudproxy = unittest.skipIf(CLOUD_PROXY_PATH is None, "Cloud Proxy path hasn't been specified")
 
-libevtest = unittest.skipUnless(EVENT_LOOP_MANAGER=="libev", "Test timing designed for libev loop")
+libevtest = unittest.skipUnless(EVENT_LOOP_MANAGER == "libev", "Test timing designed for libev loop")
+
 
 def wait_for_node_socket(node, timeout):
     binary_itf = node.network_interfaces['binary']
@@ -422,10 +424,10 @@ def check_log_error():
     global CCM_CLUSTER
     log.debug("Checking log error of cluster {0}".format(CCM_CLUSTER.name))
     for node in CCM_CLUSTER.nodelist():
-            errors = node.grep_log_for_errors()
-            for error in errors:
-                for line in error:
-                    print(line)
+        errors = node.grep_log_for_errors()
+        for error in errors:
+            for line in error:
+                print(line)
 
 
 def remove_cluster():
@@ -861,15 +863,15 @@ class BasicKeyspaceUnitTestCase(unittest.TestCase):
             execute_until_pass(cls.session, ddl)
 
     def create_function_table(self):
-            ddl = '''
+        ddl = '''
                 CREATE TABLE {0}.{1} (
                     k int PRIMARY KEY,
                     v int )'''.format(self.keyspace_name, self.function_table_name)
-            execute_until_pass(self.session, ddl)
+        execute_until_pass(self.session, ddl)
 
     def drop_function_table(self):
-            ddl = "DROP TABLE {0}.{1} ".format(self.keyspace_name, self.function_table_name)
-            execute_until_pass(self.session, ddl)
+        ddl = "DROP TABLE {0}.{1} ".format(self.keyspace_name, self.function_table_name)
+        execute_until_pass(self.session, ddl)
 
 
 class MockLoggingHandler(logging.Handler):
@@ -895,7 +897,7 @@ class MockLoggingHandler(logging.Handler):
         count = 0
         for msg in self.messages.get(level):
             if sub_string in msg:
-                count+=1
+                count += 1
         return count
 
     def set_module_name(self, module_name):
@@ -1048,6 +1050,7 @@ class TestCluster(object):
             kwargs['allow_beta_protocol_version'] = cls.DEFAULT_ALLOW_BETA
         return Cluster(**kwargs)
 
+
 # Subclass of CCMCluster (i.e. ccmlib.cluster.Cluster) which transparently performs
 # conversion of cassandra.yml directives into something matching the new syntax
 # introduced by CASSANDRA-15234
@@ -1081,5 +1084,5 @@ class Cassandra41CCMCluster(CCMCluster):
         return v
 
     def set_configuration_options(self, values=None, *args, **kwargs):
-        new_values = {self._get_config_key(k, str(v)):self._get_config_val(k, str(v)) for (k,v) in values.items()}
+        new_values = {self._get_config_key(k, str(v)): self._get_config_val(k, str(v)) for (k, v) in values.items()}
         super(Cassandra41CCMCluster, self).set_configuration_options(values=new_values, *args, **kwargs)

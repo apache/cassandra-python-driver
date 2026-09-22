@@ -78,7 +78,7 @@ class CloudConfig(object):
         return c
 
 
-def get_cloud_config(cloud_config, create_pyopenssl_context=False):
+def get_cloud_config(cloud_config):
     if not _HAS_SSL:
         raise DriverException("A Python installation with SSL is required to connect to a cloud cluster.")
 
@@ -86,17 +86,15 @@ def get_cloud_config(cloud_config, create_pyopenssl_context=False):
         raise ValueError("The cloud config doesn't have a secure_connect_bundle specified.")
 
     try:
-        config = read_cloud_config_from_zip(cloud_config, create_pyopenssl_context)
+        config = read_cloud_config_from_zip(cloud_config)
     except BadZipFile:
         raise ValueError("Unable to open the zip file for the cloud config. Check your secure connect bundle.")
 
     config = read_metadata_info(config, cloud_config)
-    if create_pyopenssl_context:
-        config.ssl_context = config.pyopenssl_context
     return config
 
 
-def read_cloud_config_from_zip(cloud_config, create_pyopenssl_context):
+def read_cloud_config_from_zip(cloud_config):
     secure_bundle = cloud_config['secure_connect_bundle']
     use_default_tempdir = cloud_config.get('use_default_tempdir', None)
     with ZipFile(secure_bundle) as zipfile:
@@ -104,12 +102,12 @@ def read_cloud_config_from_zip(cloud_config, create_pyopenssl_context):
         tmp_dir = tempfile.mkdtemp(dir=base_dir)
         try:
             zipfile.extractall(path=tmp_dir)
-            return parse_cloud_config(os.path.join(tmp_dir, 'config.json'), cloud_config, create_pyopenssl_context)
+            return parse_cloud_config(os.path.join(tmp_dir, 'config.json'), cloud_config)
         finally:
             shutil.rmtree(tmp_dir)
 
 
-def parse_cloud_config(path, cloud_config, create_pyopenssl_context):
+def parse_cloud_config(path, cloud_config):
     with open(path, 'r') as stream:
         data = json.load(stream)
 
@@ -123,11 +121,7 @@ def parse_cloud_config(path, cloud_config, create_pyopenssl_context):
         ca_cert_location = os.path.join(config_dir, 'ca.crt')
         cert_location = os.path.join(config_dir, 'cert')
         key_location = os.path.join(config_dir, 'key')
-        # Regardless of if we create a pyopenssl context, we still need the builtin one
-        # to connect to the metadata service
         config.ssl_context = _ssl_context_from_cert(ca_cert_location, cert_location, key_location)
-        if create_pyopenssl_context:
-            config.pyopenssl_context = _pyopenssl_context_from_cert(ca_cert_location, cert_location, key_location)
 
     return config
 
@@ -178,18 +172,3 @@ def _ssl_context_from_cert(ca_cert_location, cert_location, key_location):
 
     return ssl_context
 
-
-def _pyopenssl_context_from_cert(ca_cert_location, cert_location, key_location):
-    try:
-        from OpenSSL import SSL
-    except ImportError as e:
-        raise ImportError(
-            "PyOpenSSL must be installed to connect to Astra with the Eventlet or Twisted event loops")\
-            .with_traceback(e.__traceback__)
-    ssl_context = SSL.Context(SSL.TLSv1_METHOD)
-    ssl_context.set_verify(SSL.VERIFY_PEER, callback=lambda _1, _2, _3, _4, ok: ok)
-    ssl_context.use_certificate_file(cert_location)
-    ssl_context.use_privatekey_file(key_location)
-    ssl_context.load_verify_locations(ca_cert_location)
-
-    return ssl_context

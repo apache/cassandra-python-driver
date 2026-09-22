@@ -35,6 +35,7 @@ import calendar
 from collections import namedtuple
 from decimal import Decimal
 import io
+import ipaddress
 from itertools import chain
 import logging
 import re
@@ -53,7 +54,6 @@ from cassandra.marshal import (int8_pack, int8_unpack, int16_pack, int16_unpack,
 from cassandra import util
 
 _little_endian_flag = 1  # we always serialize LE
-import ipaddress
 
 apache_cassandra_type_prefix = 'org.apache.cassandra.db.marshal.'
 
@@ -236,6 +236,7 @@ def parse_casstype_args(typestring):
     # return the first (outer) type, which will have all parameters applied
     return args[0][0][0]
 
+
 def lookup_casstype(casstype):
     """
     Given a Cassandra type as a string (possibly including parameters), hand
@@ -266,6 +267,7 @@ class EmptyValue(object):
     def __str__(self):
         return "EMPTY"
     __repr__ = __str__
+
 
 EMPTY = EmptyValue()
 
@@ -397,6 +399,7 @@ class _CassandraType(object, metaclass=CassandraTypeType):
     def serial_size(cls):
         return None
 
+
 # it's initially named with a _ to avoid registering it as a real type, but
 # client programs may want to use the name still for isinstance(), etc
 CassandraType = _CassandraType
@@ -465,6 +468,7 @@ class UUIDType(_CassandraType):
     def serial_size(cls):
         return 16
 
+
 class BooleanType(_CassandraType):
     typename = 'boolean'
 
@@ -479,6 +483,7 @@ class BooleanType(_CassandraType):
     @classmethod
     def serial_size(cls):
         return 1
+
 
 class ByteType(_CassandraType):
     typename = 'tinyint'
@@ -523,6 +528,7 @@ class FloatType(_CassandraType):
     def serial_size(cls):
         return 4
 
+
 class DoubleType(_CassandraType):
     typename = 'double'
 
@@ -537,6 +543,7 @@ class DoubleType(_CassandraType):
     @classmethod
     def serial_size(cls):
         return 8
+
 
 class LongType(_CassandraType):
     typename = 'bigint'
@@ -553,6 +560,7 @@ class LongType(_CassandraType):
     def serial_size(cls):
         return 8
 
+
 class Int32Type(_CassandraType):
     typename = 'int'
 
@@ -567,6 +575,7 @@ class Int32Type(_CassandraType):
     @classmethod
     def serial_size(cls):
         return 4
+
 
 class IntegerType(_CassandraType):
     typename = 'varint'
@@ -609,6 +618,7 @@ class InetAddressType(_CassandraType):
 
 class CounterColumnType(LongType):
     typename = 'counter'
+
 
 cql_timestamp_formats = (
     '%Y-%m-%d %H:%M',
@@ -667,6 +677,7 @@ class DateType(_CassandraType):
     def serial_size(cls):
         return 8
 
+
 class TimestampType(DateType):
     pass
 
@@ -691,6 +702,7 @@ class TimeUUIDType(DateType):
     @classmethod
     def serial_size(cls):
         return 16
+
 
 class SimpleDateType(_CassandraType):
     typename = 'date'
@@ -731,13 +743,14 @@ class ShortType(_CassandraType):
     def serialize(byts, protocol_version):
         return int16_pack(byts)
 
+
 class TimeType(_CassandraType):
     typename = 'time'
     # Time should be a fixed size 8 byte type but Cassandra 5.0 code marks it as
     # variable size... and we have to match what the server expects since the server
     # uses that specification to encode data of that type.
-    #@classmethod
-    #def serial_size(cls):
+    # @classmethod
+    # def serial_size(cls):
     #    return 8
 
     @staticmethod
@@ -993,7 +1006,8 @@ class UserType(TupleType):
                                                'fieldnames': field_names,
                                                'keyspace': keyspace,
                                                'mapped_class': None,
-                                               'tuple_type': cls._make_registered_udt_namedtuple(keyspace, udt_name, field_names)})
+                                               'tuple_type': cls._make_registered_udt_namedtuple(keyspace, udt_name,
+                                                                                                 field_names)})
             cls._cache[(keyspace, udt_name)] = instance
         return instance
 
@@ -1006,9 +1020,11 @@ class UserType(TupleType):
 
     @classmethod
     def apply_parameters(cls, subtypes, names):
-        keyspace = subtypes[0].cass_parameterized_type()  # when parsed from cassandra type, the keyspace is created as an unrecognized cass type; This gets the name back
+        # when parsed from cassandra type, the keyspace is created as an unrecognized cass type; This resolves the name
+        keyspace = subtypes[0].cass_parameterized_type()
         udt_name = _name_from_hex_string(subtypes[1].cassname)
-        field_names = tuple(_name_from_hex_string(encoded_name) for encoded_name in names[2:])  # using tuple here to match what comes into make_udt_class from other sources (for caching equality test)
+        # tuple matches what comes into make_udt_class from other sources (for caching equality test)
+        field_names = tuple(_name_from_hex_string(encoded_name) for encoded_name in names[2:])
         return cls.make_udt_class(keyspace, udt_name, field_names, tuple(subtypes[2:]))
 
     @classmethod
@@ -1430,6 +1446,7 @@ class DateRangeType(CassandraType):
 
         return buf.getvalue()
 
+
 class VectorType(_CassandraType):
     typename = 'org.apache.cassandra.db.marshal.VectorType'
     vector_size = 0
@@ -1454,7 +1471,7 @@ class VectorType(_CassandraType):
             expected_byte_size = serialized_size * cls.vector_size
             if len(byts) != expected_byte_size:
                 raise ValueError(
-                    "Expected vector of type {0} and dimension {1} to have serialized size {2}; observed serialized size of {3} instead"\
+                    "Expected vector of type {0} and dimension {1} to have serialized size {2}; observed serialized size of {3} instead"
                     .format(cls.subtype.typename, cls.vector_size, expected_byte_size, len(byts)))
             indexes = (serialized_size * x for x in range(0, cls.vector_size))
             return [cls.subtype.deserialize(byts[idx:idx + serialized_size], protocol_version) for idx in indexes]
@@ -1468,8 +1485,8 @@ class VectorType(_CassandraType):
                 rv.append(cls.subtype.deserialize(byts[idx:idx + size], protocol_version))
                 idx += size
             except:
-                raise ValueError("Error reading additional data during vector deserialization after successfully adding {} elements"\
-                .format(len(rv)))
+                raise ValueError("Error reading additional data during vector deserialization after successfully adding {} elements"
+                                 .format(len(rv)))
 
         # If we have any additional data in the serialized vector treat that as an error as well
         if idx < len(byts):
@@ -1481,7 +1498,7 @@ class VectorType(_CassandraType):
         v_length = len(v)
         if cls.vector_size != v_length:
             raise ValueError(
-                "Expected sequence of size {0} for vector of type {1} and dimension {0}, observed sequence of length {2}"\
+                "Expected sequence of size {0} for vector of type {1} and dimension {0}, observed sequence of length {2}"
                 .format(cls.vector_size, cls.subtype.typename, v_length))
 
         serialized_size = cls.subtype.serial_size()

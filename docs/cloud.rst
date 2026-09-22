@@ -67,10 +67,6 @@ In most circumstances, the client code for interacting with an Astra cluster wil
 Limitations
 ===========
 
-Event loops
-^^^^^^^^^^^
-Evenlet isn't yet supported for python 3.7+ due to an `issue in Eventlet <https://github.com/eventlet/eventlet/issues/526>`_.
-
 
 CqlEngine
 =========

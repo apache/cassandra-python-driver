@@ -87,7 +87,7 @@ class Host(object):
     broadcast_rpc_port = None
     """
     The broadcast rpc port of the node, *if available*:
-    
+
     'system.local.rpc_port' or 'system.peers.native_transport_port' (DSE 6+)
     'system.local.rpc_port' or 'system.peers_v2.native_port' (Cassandra 4)
     """
@@ -609,13 +609,14 @@ class HostConnection(object):
         open_count = 1 if connection and not (connection.is_closed or connection.is_defunct) else 0
         in_flights = [connection.in_flight] if connection else []
         orphan_requests = [connection.orphaned_request_ids] if connection else []
-        return {'shutdown': self.is_shutdown, 'open_count': open_count, \
-            'in_flights': in_flights, 'orphan_requests': orphan_requests}
+        return {'shutdown': self.is_shutdown, 'open_count': open_count,
+                'in_flights': in_flights, 'orphan_requests': orphan_requests}
 
     @property
     def open_count(self):
         connection = self._connection
         return 1 if connection and not (connection.is_closed or connection.is_defunct) else 0
+
 
 _MAX_SIMULTANEOUS_CREATION = 1
 _MIN_TRASH_INTERVAL = 10
@@ -794,7 +795,7 @@ class HostConnectionPool(object):
 
         while remaining > 0:
             # wait on our condition for the possibility that a connection
-            # is useable
+            # is usable
             self._await_available_conn(remaining)
 
             # self.shutdown() may trigger the above Condition
@@ -1006,5 +1007,5 @@ class HostConnectionPool(object):
     def get_state(self):
         in_flights = [c.in_flight for c in self._connections]
         orphan_requests = [c.orphaned_request_ids for c in self._connections]
-        return {'shutdown': self.is_shutdown, 'open_count': self.open_count, \
-            'in_flights': in_flights, 'orphan_requests': orphan_requests}
+        return {'shutdown': self.is_shutdown, 'open_count': self.open_count,
+                'in_flights': in_flights, 'orphan_requests': orphan_requests}
