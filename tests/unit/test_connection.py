@@ -311,10 +311,10 @@ class ConnectionHeartbeatTest(unittest.TestCase):
                                max_request_id=127,
                                lock=Lock(),
                                in_flight=0, is_idle=True,
-                               is_defunct=False, is_closed=False,
+                               is_draining=False, is_defunct=False, is_closed=False,
                                get_request_id=lambda: request_id,
                                send_msg=Mock(side_effect=send_msg))
-        non_idle_connection = Mock(spec=Connection, in_flight=0, is_idle=False, is_defunct=False, is_closed=False)
+        non_idle_connection = Mock(spec=Connection, in_flight=0, is_idle=False, is_draining=False, is_defunct=False, is_closed=False)
 
         get_holders = self.make_get_holders(1)
         holder = get_holders.return_value[0]
@@ -353,7 +353,7 @@ class ConnectionHeartbeatTest(unittest.TestCase):
         max_connection = Mock(spec=Connection, host='localhost',
                               lock=Lock(),
                               max_request_id=in_flight - 1, in_flight=in_flight,
-                              is_idle=True, is_defunct=False, is_closed=False)
+                              is_idle=True, is_draining=False, is_defunct=False, is_closed=False)
         holder = get_holders.return_value[0]
         holder.get_connections.return_value.append(max_connection)
 
@@ -379,7 +379,7 @@ class ConnectionHeartbeatTest(unittest.TestCase):
                           max_request_id=127,
                           lock=Lock(),
                           in_flight=0, is_idle=True,
-                          is_defunct=False, is_closed=False,
+                          is_draining=False, is_defunct=False, is_closed=False,
                           get_request_id=lambda: request_id,
                           send_msg=Mock(side_effect=send_msg))
         holder = get_holders.return_value[0]
@@ -409,7 +409,7 @@ class ConnectionHeartbeatTest(unittest.TestCase):
                           max_request_id=127,
                           lock=Lock(),
                           in_flight=0, is_idle=True,
-                          is_defunct=False, is_closed=False,
+                          is_draining=False, is_defunct=False, is_closed=False,
                           get_request_id=lambda: request_id,
                           send_msg=Mock(side_effect=send_msg))
         holder = get_holders.return_value[0]

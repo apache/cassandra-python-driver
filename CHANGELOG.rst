@@ -1,3 +1,11 @@
+Unreleased
+==========
+
+Features
+--------
+* Support CEP-59 graceful disconnect: register for GRACEFUL_DISCONNECT events and drain
+  connections without disrupting in-flight requests when a node shuts down (CASSPYTHON-16)
+
 3.30.0
 ======
 March 23, 2026

@@ -728,6 +728,16 @@ class Connection(object):
 
     is_defunct = False
     is_closed = False
+
+    # Set to true when a GRACEFUL_DISCONNECT event (CEP-59) was received on
+    # this connection: no new requests are accepted, and the connection is
+    # closed once all in-flight requests have completed.
+    is_draining = False
+
+    # Whether this connection's SUPPORTED response advertised the CEP-59
+    # graceful disconnect capability (negotiated per connection).
+    supports_graceful_disconnect = False
+
     lock = None
     user_type_map = None
 
@@ -1062,17 +1072,53 @@ class Connection(object):
 
     def handle_pushed(self, response):
         log.debug("Message pushed from server: %r", response)
+        if getattr(response, 'event_type', None) == 'GRACEFUL_DISCONNECT':
+            # Start draining this connection first, so that the drain is not
+            # compromised if a callback below misbehaves.
+            self.start_graceful_drain()
         for cb in self._push_watchers.get(response.event_type, []):
             try:
                 cb(response.event_args)
             except Exception:
                 log.exception("Pushed event handler errored, ignoring:")
 
+    def start_graceful_drain(self):
+        """
+        Start a graceful drain of this connection (CEP-59): new requests are
+        refused, in-flight requests are allowed to complete, and the
+        connection is closed once the last in-flight request has completed.
+        """
+        with self.lock:
+            if self.is_defunct or self.is_closed or self.is_draining:
+                return
+            self.is_draining = True
+            has_pending = bool(self._requests) or bool(self._continuous_paging_sessions)
+        log.debug("Draining connection (%s) to %s gracefully; pending requests: %s",
+                  id(self), self.endpoint, has_pending)
+        if not has_pending:
+            self.close()
+
+    def _maybe_finish_graceful_drain(self):
+        """
+        Complete a graceful drain by closing the connection once nothing is
+        in flight anymore.
+        """
+        if not self.is_draining or self.is_closed or self.is_defunct:
+            return
+        with self.lock:
+            has_pending = bool(self._requests) or bool(self._continuous_paging_sessions)
+        if not has_pending:
+            log.debug("Graceful drain of connection (%s) to %s complete, closing",
+                      id(self), self.endpoint)
+            self.close()
+
     def send_msg(self, msg, request_id, cb, encoder=ProtocolHandler.encode_message, decoder=ProtocolHandler.decode_message, result_metadata=None):
         if self.is_defunct:
             raise ConnectionShutdown("Connection to %s is defunct" % self.endpoint)
         elif self.is_closed:
             raise ConnectionShutdown("Connection to %s is closed" % self.endpoint)
+        elif self.is_draining:
+            raise ConnectionShutdown("Connection to %s is draining (graceful disconnect)" % self.endpoint)
         elif not self._socket_writable:
             raise ConnectionBusy("Connection %s is overloaded" % self.endpoint)
 
@@ -1306,6 +1352,8 @@ class Connection(object):
                 with self.lock:
                     self.request_ids.append(stream_id)
 
+        self._maybe_finish_graceful_drain()
+
     def new_continuous_paging_session(self, stream_id, decoder, row_factory, state):
         session = ContinuousPagingSession(stream_id, decoder, row_factory, self, state)
         self._continuous_paging_sessions[stream_id] = session
@@ -1345,6 +1393,8 @@ class Connection(object):
         supported_cql_versions = options_response.cql_versions
         remote_supported_compressions = options_response.options['COMPRESSION']
         self._product_type = options_response.options.get('PRODUCT_TYPE', [None])[0]
+        self.supports_graceful_disconnect = \
+            self._supports_graceful_disconnect(options_response.options)
 
         if self.cql_version:
             if self.cql_version not in supported_cql_versions:
@@ -1397,6 +1447,20 @@ class Connection(object):
                         locally_supported_compressions[compression_type]
 
         self._send_startup_message(compression_type, no_compact=self.no_compact)
+
+    @staticmethod
+    def _supports_graceful_disconnect(supported_options):
+        """
+        Whether a SUPPORTED response advertises the CEP-59 graceful disconnect
+        capability. The server may send the key with an explicit ``"false"``
+        value when the feature is disabled.
+        """
+        if supported_options is None:
+            return False
+        values = supported_options.get('GRACEFUL_DISCONNECT')
+        if values is None:
+            return False
+        return not any(value.lower() == 'false' for value in values)
 
     @defunct_on_error
     def _send_startup_message(self, compression=None, no_compact=False):
@@ -1713,6 +1777,11 @@ class ConnectionHeartbeat(Thread):
                     for connection in connections:
                         self._raise_if_stopped()
                         if not (connection.is_defunct or connection.is_closed):
+                            if connection.is_draining:
+                                # A graceful drain (CEP-59) is in progress: do not
+                                # send a heartbeat, the connection will close once
+                                # its in-flight requests have completed.
+                                continue
                             if connection.is_idle:
                                 try:
                                     futures.append(HeartbeatFuture(connection, owner))
