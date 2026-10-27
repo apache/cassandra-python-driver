@@ -3,7 +3,7 @@ Installation
 
 Supported Platforms
 -------------------
-Python 3.10 through 3.14 are supported.  Linux, OSX, and Windows are supported.
+Python 3.11 through 3.15 are supported.  Linux, OSX, and Windows are supported.
 
 As of Python driver 4.0.0 only CPython is supported.  Prior versions also explicitly supported PyPy but we no longer
 support this runtime.  See `CASSPYTHON-14 <https://issues.apache.org/jira/browse/CASSPYTHON-14>`_ for additional information.
