@@ -11,7 +11,7 @@ readme = "README.rst"
 authors = [{name = "DataStax"}]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 keywords = ["cassandra","cql","orm","dse","graph"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -19,11 +19,11 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
