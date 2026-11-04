@@ -177,7 +177,6 @@ class AsyncioConnection(Connection):
             for chunk in chunks:
                 self._write_queue.put_nowait(chunk)
 
-
     async def handle_write(self):
         while True:
             try:

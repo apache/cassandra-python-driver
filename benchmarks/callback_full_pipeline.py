@@ -43,7 +43,7 @@ class Runner(BenchmarkThread):
                 self.event.set()
 
         i = next(self.num_started)
-        if  i <= self.num_queries:
+        if i <= self.num_queries:
             key = "{0}-{1}".format(self.thread_num, i)
             future = self.run_query(key, timeout=None)
             future.add_callbacks(self.insert_next, self.insert_next)

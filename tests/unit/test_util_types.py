@@ -209,7 +209,7 @@ class VersionTests(unittest.TestCase):
 
     def test_version_parsing(self):
         versions = [
-            # Test cases here adapted from the Java driver cases 
+            # Test cases here adapted from the Java driver cases
             # (https://github.com/apache/cassandra-java-driver/blob/4.19.2/core/src/test/java/com/datastax/oss/driver/api/core/VersionTest.java)
             ('1.2.19', (1, 2, 19, 0, "")),
             ('1.2', (1, 2, 0, 0, "")),
@@ -276,14 +276,13 @@ class VersionTests(unittest.TestCase):
         self.assertTrue(Version('4.0') == Version('4.0.0.0'))
         self.assertTrue(Version('4.0') > Version('3.9.3'))
 
-
         equal_tuples = [
             (Version('4.0-SNAPSHOT'), Version('4.0-SNAPSHOT')),
             (Version('4.0.0-SNAPSHOT'), Version('4.0-SNAPSHOT')),
             (Version('4.0.0-SNAPSHOT'), Version('4.0.0-SNAPSHOT')),
             (Version('4.0.0.5-SNAPSHOT'), Version('4.0.0.5-SNAPSHOT'))
         ]
-        for (a,b) in equal_tuples:
+        for (a, b) in equal_tuples:
             self.assertEqual(a, b)
             self.assertEqual(hash(a), hash(b))
 
@@ -296,7 +295,7 @@ class VersionTests(unittest.TestCase):
             (Version('4.0-SNAPSHOT2'), Version('4.0.0-SNAPSHOT1')),
             (Version('4.0.0-alpha1-SNAPSHOT'), Version('4.0.0-SNAPSHOT'))
         ]
-        for (a,b) in left_greater_tuples:
+        for (a, b) in left_greater_tuples:
             self.assertGreater(a, b)
 
         # Test the version limit for v4 schema parsing in cassandra.metadata to make sure

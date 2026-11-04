@@ -152,6 +152,7 @@ class IsNotNullClause(WhereClause):
     def get_context_size(self):
         return 0
 
+
 # alias for convenience
 IsNotNull = IsNotNullClause
 
@@ -216,10 +217,10 @@ class SetUpdateClause(ContainerUpdateClause):
     def __unicode__(self):
         qs = []
         ctx_id = self.context_id
-        if (self.previous is None and
-                self._assignments is None and
-                self._additions is None and
-                self._removals is None):
+        if (self.previous is None
+                and self._assignments is None
+                and self._additions is None
+                and self._removals is None):
             qs += ['"{0}" = %({1})s'.format(self.field, ctx_id)]
         if self._assignments is not None:
             qs += ['"{0}" = %({1})s'.format(self.field, ctx_id)]
@@ -251,10 +252,10 @@ class SetUpdateClause(ContainerUpdateClause):
     def get_context_size(self):
         if not self._analyzed:
             self._analyze()
-        if (self.previous is None and
-                not self._assignments and
-                self._additions is None and
-                self._removals is None):
+        if (self.previous is None
+                and not self._assignments
+                and self._additions is None
+                and self._removals is None):
             return 1
         return int(bool(self._assignments)) + int(bool(self._additions)) + int(bool(self._removals))
 
@@ -262,10 +263,10 @@ class SetUpdateClause(ContainerUpdateClause):
         if not self._analyzed:
             self._analyze()
         ctx_id = self.context_id
-        if (self.previous is None and
-                self._assignments is None and
-                self._additions is None and
-                self._removals is None):
+        if (self.previous is None
+                and self._assignments is None
+                and self._additions is None
+                and self._removals is None):
             ctx[str(ctx_id)] = set()
         if self._assignments is not None:
             ctx[str(ctx_id)] = self._assignments

@@ -49,8 +49,8 @@ class MockMetadata(object):
     def get_host(self, endpoint_or_address, port=None):
         if not isinstance(endpoint_or_address, EndPoint):
             for host in self.hosts.values():
-                if (host.address == endpoint_or_address and
-                        (port is None or host.broadcast_rpc_port is None or host.broadcast_rpc_port == port)):
+                if (host.address == endpoint_or_address
+                        and (port is None or host.broadcast_rpc_port is None or host.broadcast_rpc_port == port)):
                     return host
         else:
             return self.hosts.get(endpoint_or_address)
@@ -130,7 +130,7 @@ class MockConnection(object):
         ]
 
         self.peer_results_v2 = [
-            ["native_address",  "native_port", "peer", "peer_port", "schema_version", "data_center", "rack", "tokens", "host_id"],
+            ["native_address", "native_port", "peer", "peer_port", "schema_version", "data_center", "rack", "tokens", "host_id"],
             [["192.168.1.1", 9042, "10.0.0.1", 7042, "a", "dc1", "rack1", ["1", "101", "201"], "uuid1"],
              ["192.168.1.2", 9042, "10.0.0.2", 7040, "a", "dc1", "rack1", ["2", "102", "202"], "uuid2"]]
         ]

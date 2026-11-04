@@ -48,6 +48,7 @@ log = logging.getLogger(__name__)
 
 _dispatcher_map = {}
 
+
 def _cleanup(loop):
     if loop:
         loop._cleanup()
@@ -389,7 +390,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self.error_all_requests(
                 ConnectionShutdown("Connection to %s was closed" % self.endpoint))
 
-            #This happens when the connection is shutdown while waiting for the ReadyMessage
+            # This happens when the connection is shutdown while waiting for the ReadyMessage
             if not self.connected_event.is_set():
                 self.last_error = ConnectionShutdown("Connection to %s was closed" % self.endpoint)
 
@@ -416,8 +417,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 sent = self.send(next_msg)
                 self._readable = True
             except socket.error as err:
-                if (err.args[0] in NONBLOCKING or
-                        err.args[0] in (ssl.SSL_ERROR_WANT_READ, ssl.SSL_ERROR_WANT_WRITE)):
+                if (err.args[0] in NONBLOCKING
+                        or err.args[0] in (ssl.SSL_ERROR_WANT_READ, ssl.SSL_ERROR_WANT_WRITE)):
                     with self.deque_lock:
                         self.deque.appendleft(next_msg)
                 else:

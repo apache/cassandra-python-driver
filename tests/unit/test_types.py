@@ -250,10 +250,10 @@ class TypeTests(unittest.TestCase):
         """
         int_list = ListType.apply_parameters([Int32Type])
         value = (
-                int32_pack(2) +  # num items
-                int32_pack(-1) +  # size of item1
-                int32_pack(4) +  # size of item2
-                int32_pack(42)  # item2
+            int32_pack(2)     # num items
+            + int32_pack(-1)  # size of item1
+            + int32_pack(4)   # size of item2
+            + int32_pack(42)  # item2
         )
         self.assertEqual(
             [None, 42],
@@ -267,13 +267,13 @@ class TypeTests(unittest.TestCase):
         )
 
         value = (
-                int32_pack(2) +  # num items
-                int32_pack(4) +  # key size of item1
-                int32_pack(42) +  # key item1
-                int32_pack(-1) +  # value size of item1
-                int32_pack(-1) +  # key size of item2
-                int32_pack(4) +  # value size of item2
-                int32_pack(42)  # value of item2
+            int32_pack(2)     # num items
+            + int32_pack(4)   # key size of item1
+            + int32_pack(42)  # key item1
+            + int32_pack(-1)  # value size of item1
+            + int32_pack(-1)  # key size of item2
+            + int32_pack(4)   # value size of item2
+            + int32_pack(42)  # value of item2
         )
 
         map_list = MapType.apply_parameters([Int32Type, Int32Type])
@@ -341,11 +341,11 @@ class VectorTests(unittest.TestCase):
             second_norm = self._normalize_set(second)
             self.assertEqual(first_norm, second_norm)
         elif isinstance(first, dict):
-            for ((fk,fv), (sk,sv)) in zip(first.items(), second.items()):
+            for ((fk, fv), (sk, sv)) in zip(first.items(), second.items()):
                 self._round_trip_compare_fn(fk, sk)
                 self._round_trip_compare_fn(fv, sv)
         else:
-            self.assertEqual(first,second)
+            self.assertEqual(first, second)
 
     def _round_trip_test(self, data, ctype_str):
         ctype = parse_casstype_args(ctype_str)
@@ -355,91 +355,97 @@ class VectorTests(unittest.TestCase):
             self.assertEqual(serialized_size * len(data), len(data_bytes))
         result = ctype.deserialize(data_bytes, 0)
         self.assertEqual(len(data), len(result))
-        for idx in range(0,len(data)):
+        for idx in range(0, len(data)):
             self._round_trip_compare_fn(data[idx], result[idx])
 
     def test_round_trip_basic_types_with_fixed_serialized_size(self):
-        self._round_trip_test([True, False, False, True], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.BooleanType, 4)")
-        self._round_trip_test([3.4, 2.9, 41.6, 12.0], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType, 4)")
-        self._round_trip_test([3.4, 2.9, 41.6, 12.0], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.DoubleType, 4)")
-        self._round_trip_test([3, 2, 41, 12], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.LongType, 4)")
-        self._round_trip_test([3, 2, 41, 12], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type, 4)")
-        self._round_trip_test([uuid.uuid1(), uuid.uuid1(), uuid.uuid1(), uuid.uuid1()], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.TimeUUIDType, 4)")
-        self._round_trip_test([3, 2, 41, 12], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.ShortType, 4)")
+        self._round_trip_test([True, False, False, True],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.BooleanType, 4)")
+        self._round_trip_test([3.4, 2.9, 41.6, 12.0],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.FloatType, 4)")
+        self._round_trip_test([3.4, 2.9, 41.6, 12.0],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.DoubleType, 4)")
+        self._round_trip_test([3, 2, 41, 12],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.LongType, 4)")
+        self._round_trip_test([3, 2, 41, 12],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.Int32Type, 4)")
+        self._round_trip_test([uuid.uuid1(), uuid.uuid1(), uuid.uuid1(), uuid.uuid1()],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.TimeUUIDType, 4)")
+        self._round_trip_test([3, 2, 41, 12],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.ShortType, 4)")
 
     def test_round_trip_basic_types_without_fixed_serialized_size(self):
         # Varints
-        self._round_trip_test([3, 2, 41, 12], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.IntegerType, 4)")
+        self._round_trip_test([3, 2, 41, 12],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.IntegerType, 4)")
         # ASCII text
-        self._round_trip_test(["abc", "def", "ghi", "jkl"], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.AsciiType, 4)")
+        self._round_trip_test(["abc", "def", "ghi", "jkl"],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.AsciiType, 4)")
         # UTF8 text
-        self._round_trip_test(["abc", "def", "ghi", "jkl"], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.UTF8Type, 4)")
+        self._round_trip_test(["abc", "def", "ghi", "jkl"],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.UTF8Type, 4)")
         # Time is something of a weird one.  By rights, it should be a fixed size type but C* code marks it as variable
         # size.  We're forced to follow the C* code base (since that's who'll be providing the data we're parsing) so
         # we match what they're doing.
-        self._round_trip_test([datetime.time(1,1,1), datetime.time(2,2,2), datetime.time(3,3,3)], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.TimeType, 3)")
+        self._round_trip_test([datetime.time(1, 1, 1), datetime.time(2, 2, 2), datetime.time(3, 3, 3)],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.TimeType, 3)")
         # Duration (contains varints)
-        self._round_trip_test([util.Duration(1,1,1), util.Duration(2,2,2), util.Duration(3,3,3)], \
-            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.DurationType, 3)")
+        self._round_trip_test([util.Duration(1, 1, 1), util.Duration(2, 2, 2), util.Duration(3, 3, 3)],
+                              "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.DurationType, 3)")
 
     def test_round_trip_collection_types(self):
         # List (subtype of fixed size)
-        self._round_trip_test([[1, 2, 3, 4], [5, 6], [7, 8, 9, 10], [11, 12]], \
+        self._round_trip_test(
+            [[1, 2, 3, 4], [5, 6], [7, 8, 9, 10], [11, 12]],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.ListType \
                 (org.apache.cassandra.db.marshal.Int32Type), 4)")
         # Set (subtype of fixed size)
-        self._round_trip_test([set([1, 2, 3, 4]), set([5, 6]), set([7, 8, 9, 10]), set([11, 12])], \
+        self._round_trip_test(
+            [{1, 2, 3, 4}, {5, 6}, {7, 8, 9, 10}, {11, 12}],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.SetType \
                 (org.apache.cassandra.db.marshal.Int32Type), 4)")
         # Map (subtype of fixed size)
-        self._round_trip_test([{1:1.2}, {2:3.4}, {3:5.6}, {4:7.8}], \
-                "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.MapType \
+        self._round_trip_test(
+            [{1: 1.2}, {2: 3.4}, {3: 5.6}, {4: 7.8}],
+            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.MapType \
                     (org.apache.cassandra.db.marshal.Int32Type,org.apache.cassandra.db.marshal.FloatType), 4)")
         # List (subtype without fixed size)
-        self._round_trip_test([["one","two"], ["three","four"], ["five","six"], ["seven","eight"]], \
+        self._round_trip_test(
+            [["one", "two"], ["three", "four"], ["five", "six"], ["seven", "eight"]],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.ListType \
                 (org.apache.cassandra.db.marshal.AsciiType), 4)")
         # Set (subtype without fixed size)
-        self._round_trip_test([set(["one","two"]), set(["three","four"]), set(["five","six"]), set(["seven","eight"])], \
+        self._round_trip_test(
+            [{"one", "two"}, {"three", "four"}, {"five", "six"}, {"seven", "eight"}],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.SetType \
                 (org.apache.cassandra.db.marshal.AsciiType), 4)")
         # Map (subtype without fixed size)
-        self._round_trip_test([{1:"one"}, {2:"two"}, {3:"three"}, {4:"four"}], \
-                "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.MapType \
-                    (org.apache.cassandra.db.marshal.IntegerType,org.apache.cassandra.db.marshal.AsciiType), 4)")
+        self._round_trip_test(
+            [{1: "one"}, {2: "two"}, {3: "three"}, {4: "four"}],
+            "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.MapType \
+                (org.apache.cassandra.db.marshal.IntegerType,org.apache.cassandra.db.marshal.AsciiType), 4)")
         # List of lists (subtype without fixed size)
-        data = [[["one","two"],["three"]], [["four"],["five"]], [["six","seven","eight"]], [["nine"]]]
+        data = [[["one", "two"], ["three"]], [["four"], ["five"]], [["six", "seven", "eight"]], [["nine"]]]
         ctype = "org.apache.cassandra.db.marshal.VectorType\
                     (org.apache.cassandra.db.marshal.ListType\
                         (org.apache.cassandra.db.marshal.ListType\
                             (org.apache.cassandra.db.marshal.AsciiType)), 4)"
         self._round_trip_test(data, ctype)
         # Set of sets (subtype without fixed size)
-        data = [set([frozenset(["one","two"]),frozenset(["three"])]),\
-                set([frozenset(["four"]),frozenset(["five"])]),\
-                set([frozenset(["six","seven","eight"])]),
-                set([frozenset(["nine"])])]
+        data = [{frozenset(["one", "two"]), frozenset(["three"])},
+                {frozenset(["four"]), frozenset(["five"])},
+                {frozenset(["six", "seven", "eight"])},
+                {frozenset(["nine"])}]
         ctype = "org.apache.cassandra.db.marshal.VectorType\
                     (org.apache.cassandra.db.marshal.SetType\
                         (org.apache.cassandra.db.marshal.SetType\
                             (org.apache.cassandra.db.marshal.AsciiType)), 4)"
         self._round_trip_test(data, ctype)
         # Map of maps (subtype without fixed size)
-        data = [{100:{1:"one",2:"two",3:"three"}},\
-                {200:{4:"four",5:"five"}},\
-                {300:{}},\
-                {400:{6:"six"}}]
+        data = [{100: {1: "one", 2: "two", 3: "three"}},
+                {200: {4: "four", 5: "five"}},
+                {300: {}},
+                {400: {6: "six"}}]
         ctype = "org.apache.cassandra.db.marshal.VectorType\
                     (org.apache.cassandra.db.marshal.MapType\
                         (org.apache.cassandra.db.marshal.Int32Type,\
@@ -449,12 +455,14 @@ class VectorTests(unittest.TestCase):
 
     def test_round_trip_vector_of_vectors(self):
         # Subytpes of subtypes with a fixed size
-        self._round_trip_test([[1.2, 3.4], [5.6, 7.8], [9.10, 11.12], [13.14, 15.16]], \
+        self._round_trip_test(
+            [[1.2, 3.4], [5.6, 7.8], [9.10, 11.12], [13.14, 15.16]],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.VectorType \
                 (org.apache.cassandra.db.marshal.FloatType,2), 4)")
 
         # Subytpes of subtypes without a fixed size
-        self._round_trip_test([["one", "two"], ["three", "four"], ["five", "six"], ["seven", "eight"]], \
+        self._round_trip_test(
+            [["one", "two"], ["three", "four"], ["five", "six"], ["seven", "eight"]],
             "org.apache.cassandra.db.marshal.VectorType(org.apache.cassandra.db.marshal.VectorType \
                 (org.apache.cassandra.db.marshal.AsciiType,2), 4)")
 
@@ -552,8 +560,7 @@ class DateRangeTypeTests(unittest.TestCase):
         feb_stamp = ms_timestamp_from_datetime(
             datetime.datetime(2018, 2, 25, 18, 59, 59, 0)
         )
-        dr = DateRange(OPEN_BOUND,
-                  DateRangeBound(feb_stamp, DateRangePrecision.MONTH))
+        dr = DateRange(OPEN_BOUND, DateRangeBound(feb_stamp, DateRangePrecision.MONTH))
         dt = datetime_from_timestamp(dr.upper_bound.milliseconds / 1000)
         self.assertEqual(dt.day, 28)
 
@@ -581,9 +588,9 @@ class DateRangeTypeTests(unittest.TestCase):
             DateRangeType._encode_precision('INVALID')
 
     def test_deserialize_single_value(self):
-        serialized = (int8_pack(0) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(3))
+        serialized = (int8_pack(0)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(3))
         self.assertEqual(
             DateRangeType.deserialize(serialized, 5),
             util.DateRange(value=util.DateRangeBound(
@@ -593,11 +600,11 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_deserialize_closed_range(self):
-        serialized = (int8_pack(1) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(2) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(6))
+        serialized = (int8_pack(1)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(2)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(6))
         self.assertEqual(
             DateRangeType.deserialize(serialized, 5),
             util.DateRange(
@@ -613,9 +620,9 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_deserialize_open_high(self):
-        serialized = (int8_pack(2) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(3))
+        serialized = (int8_pack(2)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(3))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -629,9 +636,9 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_deserialize_open_low(self):
-        serialized = (int8_pack(3) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(4))
+        serialized = (int8_pack(3)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(4))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -651,9 +658,9 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_serialize_single_value(self):
-        serialized = (int8_pack(0) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(5))
+        serialized = (int8_pack(0)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(5))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -666,11 +673,11 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_serialize_closed_range(self):
-        serialized = (int8_pack(1) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(5) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(0))
+        serialized = (int8_pack(1)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(5)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(0))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -687,9 +694,9 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_serialize_open_high(self):
-        serialized = (int8_pack(2) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(2))
+        serialized = (int8_pack(2)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(2))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -703,9 +710,9 @@ class DateRangeTypeTests(unittest.TestCase):
         )
 
     def test_serialize_open_low(self):
-        serialized = (int8_pack(2) +
-                      int64_pack(self.timestamp) +
-                      int8_pack(3))
+        serialized = (int8_pack(2)
+                      + int64_pack(self.timestamp)
+                      + int8_pack(3))
         deserialized = DateRangeType.deserialize(serialized, 5)
         self.assertEqual(
             deserialized,
@@ -789,9 +796,9 @@ class DateRangeTypeTests(unittest.TestCase):
         @test_category data_types
         """
         DateRangeType.deserialize(
-            (int8_pack(1) +
-             int64_pack(0) + int8_pack(0) +
-             int64_pack(0) + int8_pack(0)),
+            (int8_pack(1)
+             + int64_pack(0) + int8_pack(0)
+             + int64_pack(0) + int8_pack(0)),
             5
         )
 
@@ -885,15 +892,18 @@ class DateRangeDeserializationTests(unittest.TestCase):
 
         @test_category data_types
         """
-        self._deserialize_date_range({"minute": 0, "second": 0, "microsecond": 0},
-                                     DateRangePrecision.HOUR,
-                                     # This lambda function given a truncated date adds
-                                     # one hour minus one microsecond in microseconds
-                                     lambda x: x +
-                                               59 * 60 * 1000 +
-                                               59 * 1000 +
-                                               999,
-                                     lambda original_value, i: original_value + i * 900 * 50 * 60)
+        self._deserialize_date_range(
+            {"minute": 0, "second": 0, "microsecond": 0},
+            DateRangePrecision.HOUR,
+            # This lambda function given a truncated date adds
+            # one hour minus one microsecond in microseconds
+            lambda x: (
+                x
+                + 59 * 60 * 1000
+                + 59 * 1000
+                + 999
+            ),
+            lambda original_value, i: original_value + i * 900 * 50 * 60)
 
     def test_deserialize_date_range_day(self):
         """
@@ -905,16 +915,19 @@ class DateRangeDeserializationTests(unittest.TestCase):
 
         @test_category data_types
         """
-        self._deserialize_date_range({"hour": 0, "minute": 0, "second": 0, "microsecond": 0},
-                                     DateRangePrecision.DAY,
-                                     # This lambda function given a truncated date adds
-                                     # one day minus one microsecond in microseconds
-                                     lambda x: x +
-                                               23 * 60 * 60 * 1000 +
-                                               59 * 60 * 1000 +
-                                               59 * 1000 +
-                                               999,
-                                     lambda original_value, i: original_value + i * 900 * 50 * 60 * 24)
+        self._deserialize_date_range(
+            {"hour": 0, "minute": 0, "second": 0, "microsecond": 0},
+            DateRangePrecision.DAY,
+            # This lambda function given a truncated date adds
+            # one day minus one microsecond in microseconds
+            lambda x: (
+                x
+                + 23 * 60 * 60 * 1000
+                + 59 * 60 * 1000
+                + 59 * 1000
+                + 999
+            ),
+            lambda original_value, i: original_value + i * 900 * 50 * 60 * 24)
 
     @unittest.skip("This is currently failing, see PYTHON-912")
     def test_deserialize_date_range_month(self):
@@ -969,7 +982,7 @@ class DateRangeDeserializationTests(unittest.TestCase):
             diff = time.mktime(dt.timetuple()) - time.mktime(self.epoch.timetuple())
             return diff * 1000 + 999
             # This doesn't work for big values because it loses precision
-            #return int((dt - self.epoch).total_seconds() * 1000)
+            # return int((dt - self.epoch).total_seconds() * 1000)
         self._deserialize_date_range({"month": 1, "day": 1, "hour": 0, "minute": 0, "second": 0, "microsecond": 0},
                                      DateRangePrecision.YEAR,
                                      get_upper_bound,
@@ -1069,8 +1082,8 @@ class TestOrdering(unittest.TestCase):
         date_format = "%Y-%m-%d"
 
         dates_from_value = [
-            Date((datetime.datetime.strptime(dtstr, date_format) -
-                  datetime.datetime(1970, 1, 1)).days)
+            Date((datetime.datetime.strptime(dtstr, date_format)
+                  - datetime.datetime(1970, 1, 1)).days)
             for dtstr in ("2017-01-02", "2017-01-06", "2017-01-10", "2017-01-14")
         ]
         dates_from_value_equal = [Date(1), Date(1)]
@@ -1080,7 +1093,7 @@ class TestOrdering(unittest.TestCase):
         dates_from_datetime = [Date(datetime.datetime.strptime(dtstr, date_format))
                                for dtstr in ("2017-01-03", "2017-01-07", "2017-01-11", "2017-01-15")]
         dates_from_datetime_equal = [Date(datetime.datetime.strptime("2017-01-01", date_format)),
-                               Date(datetime.datetime.strptime("2017-01-01", date_format))]
+                                     Date(datetime.datetime.strptime("2017-01-01", date_format))]
         check_sequence_consistency(self, dates_from_datetime)
         check_sequence_consistency(self, dates_from_datetime_equal, equal=True)
 

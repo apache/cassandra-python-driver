@@ -112,8 +112,12 @@ class ResponseFutureTests(unittest.TestCase):
         rf = self.make_response_future(session)
         rf.send_request()
 
-        event_results={'target_type': SchemaTargetType.TABLE, 'change_type': SchemaChangeType.CREATED,
-                       'keyspace': "keyspace1", "table": "table1"}
+        event_results = {
+            'target_type': SchemaTargetType.TABLE,
+            'change_type': SchemaChangeType.CREATED,
+            'keyspace': "keyspace1",
+            "table": "table1"
+        }
         result = Mock(spec=ResultMessage,
                       kind=RESULT_KIND_SCHEMA_CHANGE,
                       schema_change_event=event_results)
@@ -170,8 +174,8 @@ class ResponseFutureTests(unittest.TestCase):
         rf = ResponseFuture(session, message, query, 1)
         rf.send_request()
 
-        result = Mock(spec=ReadTimeoutErrorMessage, info={"data_retrieved": "", "required_responses":2,
-                                                           "received_responses":1, "consistency": 1})
+        result = Mock(spec=ReadTimeoutErrorMessage, info={"data_retrieved": "", "required_responses": 2,
+                                                          "received_responses": 1, "consistency": 1})
         rf._set_result(None, None, None, result)
 
         self.assertRaises(Exception, rf.result)
@@ -184,8 +188,8 @@ class ResponseFutureTests(unittest.TestCase):
         rf = ResponseFuture(session, message, query, 1)
         rf.send_request()
 
-        result = Mock(spec=WriteTimeoutErrorMessage, info={"write_type": 1, "required_responses":2,
-                                                           "received_responses":1, "consistency": 1})
+        result = Mock(spec=WriteTimeoutErrorMessage, info={"write_type": 1, "required_responses": 2,
+                                                           "received_responses": 1, "consistency": 1})
         rf._set_result(None, None, None, result)
         self.assertRaises(Exception, rf.result)
 
@@ -200,7 +204,7 @@ class ResponseFutureTests(unittest.TestCase):
         rf._query_retries = 1
         rf.send_request()
 
-        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas":2, "alive_replicas": 1, "consistency": 1})
+        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas": 2, "alive_replicas": 1, "consistency": 1})
         rf._set_result(None, None, None, result)
         self.assertRaises(Exception, rf.result)
 
@@ -436,7 +440,7 @@ class ResponseFutureTests(unittest.TestCase):
 
         rf.add_errback(self.assertIsInstance, Exception)
 
-        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas":2, "alive_replicas": 1, "consistency": 1})
+        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas": 2, "alive_replicas": 1, "consistency": 1})
         result.to_exception.return_value = Exception()
 
         rf._set_result(None, None, None, result)
@@ -494,7 +498,7 @@ class ResponseFutureTests(unittest.TestCase):
         rf.add_errback(callback2, arg2, **kwargs2)
 
         expected_exception = Unavailable("message", 1, 2, 3)
-        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas":2, "alive_replicas": 1, "consistency": 1})
+        result = Mock(spec=UnavailableErrorMessage, info={"required_replicas": 2, "alive_replicas": 1, "consistency": 1})
         result.to_exception.return_value = expected_exception
         rf._set_result(None, None, None, result)
         rf._event.set()
@@ -518,7 +522,7 @@ class ResponseFutureTests(unittest.TestCase):
             errback=self.assertIsInstance, errback_args=(Exception,))
 
         result = Mock(spec=UnavailableErrorMessage,
-                      info={"required_replicas":2, "alive_replicas": 1, "consistency": 1})
+                      info={"required_replicas": 2, "alive_replicas": 1, "consistency": 1})
         result.to_exception.return_value = Exception()
         rf._set_result(None, None, None, result)
         self.assertRaises(Exception, rf.result)
@@ -617,7 +621,7 @@ class ResponseFutureTests(unittest.TestCase):
         pool = self.make_pool()
         session._pools.get.return_value = pool
         connection = Mock(spec=Connection, lock=RLock(), _requests={}, request_ids=deque(),
-                orphaned_request_ids=set(), orphaned_threshold=256)
+                          orphaned_request_ids=set(), orphaned_threshold=256)
         pool.borrow_connection.return_value = (connection, 1)
 
         rf = self.make_response_future(session)

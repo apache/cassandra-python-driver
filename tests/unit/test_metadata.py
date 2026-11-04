@@ -67,7 +67,6 @@ class ReplicationFactorTest(unittest.TestCase):
         self.assertNotEqual(ReplicationFactor.create('3'), ReplicationFactor.create('3/1'))
 
 
-
 class StrategiesTest(unittest.TestCase):
 
     @classmethod
@@ -255,7 +254,7 @@ class StrategiesTest(unittest.TestCase):
             host = Host('dc1.{0}'.format(i), SimpleConvictionPolicy)
             host.set_location_info('dc1', "rack1")
             for vnode_num in range(vnodes_per_host):
-                md5_token = MD5Token(current_token+vnode_num)
+                md5_token = MD5Token(current_token + vnode_num)
                 token_to_host_owner[md5_token] = host
                 ring.append(md5_token)
             current_token += 1000
@@ -377,19 +376,22 @@ class NameEscapingTest(unittest.TestCase):
         Test cassandra.metadata.protect_names output
         """
         self.assertEqual(protect_names(['tests']), ['tests'])
-        self.assertEqual(protect_names(
-            [
-                'tests',
-                'test\'s',
-                'tests ?!@#$%^&*()',
-                '1'
-            ]),
+        self.assertEqual(
+            protect_names(
+                [
+                    'tests',
+                    'test\'s',
+                    'tests ?!@#$%^&*()',
+                    '1'
+                ]
+            ),
             [
                 'tests',
                 "\"test's\"",
                 '"tests ?!@#$%^&*()"',
                 '"1"'
-            ])
+            ]
+        )
 
     def test_protect_value(self):
         """
@@ -625,13 +627,13 @@ class IndexTest(unittest.TestCase):
         row = {'index_name': 'index_name_here', 'index_type': 'index_type_here'}
         index_meta = parser._build_index_metadata(column_meta, row)
         self.assertEqual(index_meta.as_cql_query(),
-                'CREATE INDEX index_name_here ON keyspace_name_here.table_name_here (column_name_here)')
+                         'CREATE INDEX index_name_here ON keyspace_name_here.table_name_here (column_name_here)')
 
         row['index_options'] = '{ "class_name": "class_name_here" }'
         row['index_type'] = 'CUSTOM'
         index_meta = parser._build_index_metadata(column_meta, row)
         self.assertEqual(index_meta.as_cql_query(),
-                "CREATE CUSTOM INDEX index_name_here ON keyspace_name_here.table_name_here (column_name_here) USING 'class_name_here'")
+                         "CREATE CUSTOM INDEX index_name_here ON keyspace_name_here.table_name_here (column_name_here) USING 'class_name_here'")
 
 
 class UnicodeIdentifiersTests(unittest.TestCase):

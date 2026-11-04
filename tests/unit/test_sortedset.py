@@ -22,6 +22,7 @@ from cassandra.cqltypes import EMPTY
 from datetime import datetime
 from itertools import permutations
 
+
 class SortedSetTest(unittest.TestCase):
     def test_init(self):
         input = [5, 4, 3, 2, 1, 1, 1]
@@ -42,8 +43,8 @@ class SortedSetTest(unittest.TestCase):
             self.assertTrue(i in ss)
             self.assertFalse(i not in ss)
 
-        hi = max(expected)+1
-        lo = min(expected)-1
+        hi = max(expected) + 1
+        lo = min(expected) - 1
 
         self.assertFalse(hi in ss)
         self.assertFalse(lo in ss)
@@ -212,7 +213,7 @@ class SortedSetTest(unittest.TestCase):
             ss[len(ss)]
 
     def test_delitem(self):
-        expected = [1,2,3,4]
+        expected = [1, 2, 3, 4]
         ss = sortedset(expected)
         for i in range(len(ss)):
             self.assertListEqual(list(ss), expected[i:])
@@ -287,7 +288,7 @@ class SortedSetTest(unittest.TestCase):
         self.assertEqual(tmp, sortedset())
 
         # __rand__
-        self.assertEqual(set([1]) & ss12, ss1)
+        self.assertEqual({1} & ss12, ss1)
 
         # __or__
         self.assertEqual(ss1 | ss12, ss12)
@@ -311,7 +312,7 @@ class SortedSetTest(unittest.TestCase):
         self.assertEqual(tmp, ss12)
 
         # __ror__
-        self.assertEqual(set([1]) | ss12, ss12)
+        self.assertEqual({1} | ss12, ss12)
 
         # __sub__
         self.assertEqual(ss1 - ss12, set())
@@ -334,21 +335,21 @@ class SortedSetTest(unittest.TestCase):
         self.assertEqual(tmp, sortedset([2]))
 
         # __rsub__
-        self.assertEqual(set((1,2,3)) - ss12, set((3,)))
+        self.assertEqual({1, 2, 3} - ss12, {3})
 
         # __xor__
-        self.assertEqual(ss1 ^ ss12, set([2]))
-        self.assertEqual(ss12 ^ ss1, set([2]))
+        self.assertEqual(ss1 ^ ss12, {2})
+        self.assertEqual(ss12 ^ ss1, {2})
         self.assertEqual(ss12 ^ ss12, set())
         self.assertEqual(ss12 ^ set(), ss12)
 
         # __ixor__
         tmp = sortedset(ss1)
         tmp ^= ss12
-        self.assertEqual(tmp, set([2]))
+        self.assertEqual(tmp, {2})
         tmp = sortedset(ss12)
         tmp ^= ss1
-        self.assertEqual(tmp, set([2]))
+        self.assertEqual(tmp, {2})
         tmp = sortedset(ss12)
         tmp ^= ss12
         self.assertEqual(tmp, set())
@@ -357,10 +358,10 @@ class SortedSetTest(unittest.TestCase):
         self.assertEqual(tmp, ss12)
 
         # __rxor__
-        self.assertEqual(set([1, 2]) ^ ss1, (set([2])))
+        self.assertEqual({1, 2} ^ ss1, ({2}))
 
     def test_reduce_pickle(self):
-        ss = sortedset((4,3,2,1))
+        ss = sortedset((4, 3, 2, 1))
         import pickle
         s = pickle.dumps(ss)
         self.assertEqual(pickle.loads(s), ss)

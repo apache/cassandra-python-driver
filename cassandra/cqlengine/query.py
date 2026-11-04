@@ -112,7 +112,6 @@ class AbstractQueryableColumn(UnicodeMixin):
         """
         return WhereClause(str(self), ContainsOperator(), item)
 
-
     def __eq__(self, other):
         return WhereClause(str(self), EqualsOperator(), self._to_database(other))
 
@@ -148,7 +147,6 @@ class BatchQuery(object):
 
     _connection = None
     _connection_explicit = False
-
 
     def __init__(self, batch_type=None, timestamp=None, consistency=None, execute_on_exception=False,
                  timeout=conn.NOT_SET, connection=None):
@@ -384,7 +382,7 @@ class AbstractQuerySet(object):
         self._count = None
 
         self._batch = None
-        self._ttl =  None
+        self._ttl = None
         self._consistency = None
         self._timestamp = None
         self._if_not_exists = False
@@ -730,8 +728,8 @@ class AbstractQuerySet(object):
                 query_val = [column.to_database(v) for v in val]
             elif isinstance(val, BaseQueryFunction):
                 query_val = val
-            elif (isinstance(operator, ContainsOperator) and
-                  isinstance(column, (columns.List, columns.Set, columns.Map))):
+            elif (isinstance(operator, ContainsOperator)
+                  and isinstance(column, (columns.List, columns.Set, columns.Map))):
                 # For ContainsOperator and collections, we query using the value, not the container
                 query_val = val
             else:
@@ -1076,7 +1074,7 @@ class ModelQuerySet(AbstractQuerySet):
         # relationship with a primary key or indexed field. We also allow
         # custom indexes to be queried with any operator (a difference
         # between a secondary index)
-        equal_ops = [self.model._get_column_by_db_name(w.field) \
+        equal_ops = [self.model._get_column_by_db_name(w.field)
                      for w in self._where if not isinstance(w.value, Token)
                      and (isinstance(w.operator, EqualsOperator)
                           or self.model._get_column_by_db_name(w.field).custom_index)]
@@ -1366,9 +1364,8 @@ class DMLQuery(object):
         connection = self.instance._get_connection() if self.instance else self.model._get_connection()
         if self._batch:
             if self._batch._connection:
-                if not self._batch._connection_explicit and connection and \
-                        connection != self._batch._connection:
-                            raise CQLEngineException('BatchQuery queries must be executed on the same connection')
+                if not self._batch._connection_explicit and connection and connection != self._batch._connection:
+                    raise CQLEngineException('BatchQuery queries must be executed on the same connection')
             else:
                 # set the BatchQuery connection from the model
                 self._batch._connection = connection
@@ -1477,7 +1474,7 @@ class DMLQuery(object):
         if self.instance._has_counter or self.instance._can_update():
             if self.instance._has_counter:
                 warn("'create' and 'save' actions on Counters are deprecated. It will be disallowed in 4.0. "
-                    "Use the 'update' mechanism instead.", DeprecationWarning)
+                     "Use the 'update' mechanism instead.", DeprecationWarning)
             return self.update()
         else:
             insert = InsertStatement(self.column_family_name, ttl=self._ttl, timestamp=self._timestamp, if_not_exists=self._if_not_exists)

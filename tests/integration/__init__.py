@@ -1055,9 +1055,9 @@ class TestCluster(object):
 # introduced by CASSANDRA-15234
 class Cassandra41CCMCluster(CCMCluster):
     __test__ = False
-    IN_MS_REGEX = re.compile('^(\w+)_in_ms$')
-    IN_KB_REGEX = re.compile('^(\w+)_in_kb$')
-    ENABLE_REGEX = re.compile('^enable_(\w+)$')
+    IN_MS_REGEX = re.compile(r'^(\w+)_in_ms$')
+    IN_KB_REGEX = re.compile(r'^(\w+)_in_kb$')
+    ENABLE_REGEX = re.compile(r'^enable_(\w+)$')
 
     def _get_config_key(self, k, v):
         if "." in k:

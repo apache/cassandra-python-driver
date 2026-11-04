@@ -218,7 +218,8 @@ class MessageTest(unittest.TestCase):
             keyspace='ks'
         )
         batch.send_body(io, protocol_version=5)
-        self._check_calls(io,
+        self._check_calls(
+            io,
             ((b'\x00',), (b'\x00\x03',), (b'\x00',),
              (b'\x00\x00\x00\x06',), (b'stmt a',),
              (b'\x00\x01',), (b'\x00\x00\x00\x07',), ('param a',),

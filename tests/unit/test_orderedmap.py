@@ -19,6 +19,7 @@ import unittest
 from cassandra.util import OrderedMap, OrderedMapSerializedKey
 from cassandra.cqltypes import EMPTY, UTF8Type, lookup_casstype
 
+
 class OrderedMapTest(unittest.TestCase):
     def test_init(self):
         a = OrderedMap(zip(['one', 'three', 'two'], [1, 3, 2]))
@@ -78,7 +79,7 @@ class OrderedMapTest(unittest.TestCase):
 
         for v, k in enumerate(keys):
             self.assertEqual(om.get(k), v)
-        
+
         self.assertEqual(om.get('notthere', 'default'), 'default')
         self.assertIsNone(om.get('notthere'))
 
@@ -107,7 +108,7 @@ class OrderedMapTest(unittest.TestCase):
 
         for v, k in enumerate(keys):
             self.assertEqual(om[k], v)
-        
+
         with self.assertRaises(KeyError):
             om['notthere']
 

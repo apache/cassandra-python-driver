@@ -84,5 +84,6 @@ def main():
 
     session.execute("DROP KEYSPACE " + KEYSPACE)
 
+
 if __name__ == "__main__":
     main()

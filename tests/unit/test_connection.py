@@ -285,7 +285,7 @@ class ConnectionHeartbeatTest(unittest.TestCase):
         ch = ConnectionHeartbeat(interval, get_holders_fun, timeout=timeout)
         # wait until the thread is started
         wait_until(lambda: get_holders_fun.call_count > 0, 0.01, 100)
-        time.sleep(interval * (count-1))
+        time.sleep(interval * (count - 1))
         ch.stop()
         self.assertTrue(get_holders_fun.call_count)
 
@@ -295,7 +295,7 @@ class ConnectionHeartbeatTest(unittest.TestCase):
 
         self.run_heartbeat(get_holders, count)
 
-        self.assertGreaterEqual(get_holders.call_count, count-1)
+        self.assertGreaterEqual(get_holders.call_count, count - 1)
         self.assertLessEqual(get_holders.call_count, count)
         holder = get_holders.return_value[0]
         holder.get_connections.assert_has_calls([call()] * get_holders.call_count)

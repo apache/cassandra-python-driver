@@ -18,8 +18,10 @@ from datetime import datetime
 
 from cassandra.cqlengine import UnicodeMixin, ValidationError
 
+
 def get_total_seconds(td):
     return td.total_seconds()
+
 
 class QueryValue(UnicodeMixin):
     """

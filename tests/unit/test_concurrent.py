@@ -52,7 +52,7 @@ class MockResponseResponseFuture():
         # hardcoded to avoid paging logic
         self.has_more_pages = False
 
-        if(reverse):
+        if (reverse):
             self.priority = 100
         else:
             self.priority = 0
@@ -106,8 +106,8 @@ class TimedCallableInvoker(threading.Thread):
         return self._stopper.isSet()
 
     def run(self):
-        while(not self.stopped()):
-            if(self.handler.has_next_callback()):
+        while (not self.stopped()):
+            if (self.handler.has_next_callback()):
                 pending_callback = self.handler.get_next_callback()
                 priority_num = pending_callback[0]
                 if (priority_num % 10) == 0 and self.slowdown:
@@ -117,6 +117,7 @@ class TimedCallableInvoker(threading.Thread):
                 fn([time_added], *args, **kwargs)
             self._stopper.wait(.001)
         return
+
 
 class ConcurrencyTest((unittest.TestCase)):
 
@@ -195,7 +196,7 @@ class ConcurrencyTest((unittest.TestCase)):
         t.start()
         results = execute_concurrent(mock_session, statements_and_params)
 
-        while(not our_handler.pending_callbacks.empty()):
+        while (not our_handler.pending_callbacks.empty()):
             time.sleep(.01)
         t.stop()
         self.validate_result_ordering(results)
