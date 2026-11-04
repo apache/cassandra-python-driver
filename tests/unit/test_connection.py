@@ -23,10 +23,10 @@ from cassandra import OperationTimedOut
 from cassandra.cluster import Cluster
 from cassandra.connection import (Connection, HEADER_DIRECTION_TO_CLIENT, ProtocolError,
                                   locally_supported_compressions, ConnectionHeartbeat, _Frame, Timer, TimerManager,
-                                  ConnectionException, DefaultEndPoint)
+                                  ConnectionException, DefaultEndPoint, segment_codec_no_compression)
 from cassandra.marshal import uint8_pack, uint32_pack, int32_pack
 from cassandra.protocol import (write_stringmultimap, write_int, write_string,
-                                SupportedMessage, ProtocolHandler)
+                                SupportedMessage, ProtocolHandler, ReadyMessage)
 
 from tests.util import wait_until
 
@@ -122,6 +122,34 @@ class ConnectionTest(unittest.TestCase):
         c.defunct.assert_called_once_with(ANY)
         args, kwargs = c.defunct.call_args
         self.assertIsInstance(args[0], ProtocolError)
+
+    def test_v5_segment_header_split_across_reads(self):
+        # a read that ends inside the next segment's 6-byte header must not lose those bytes
+        def frame(stream):
+            body = b'x' * 100
+            return self.make_header_prefix(ReadyMessage, version=5, stream_id=stream) + int32_pack(len(body)) + body
+
+        wire = BytesIO()
+        segment_codec_no_compression.encode(wire, frame(1))
+        segment_codec_no_compression.encode(wire, frame(2))
+        data = wire.getvalue()
+        first_segment_len = len(data) // 2
+
+        for extra in range(8):
+            with self.subTest(header_bytes_in_first_read=extra):
+                c = self.make_connection()
+                c.defunct = Mock()
+                c._enable_checksumming()
+                streams = []
+                c.process_msg = lambda header, body: streams.append(header.stream)
+
+                split_at = first_segment_len + extra
+                for chunk in (data[:split_at], data[split_at:]):
+                    c._iobuf.write(chunk)
+                    c.process_io_buffer()
+
+                c.defunct.assert_not_called()
+                assert streams == [1, 2]
 
     def test_unsupported_cql_version(self, *args):
         c = self.make_connection()
