@@ -36,7 +36,7 @@ from cassandra.cluster import ExecutionProfile, EXEC_PROFILE_DEFAULT
 from cassandra.concurrent import execute_concurrent_with_args
 from cassandra.cqltypes import Int32Type, EMPTY
 from cassandra.query import dict_factory, ordered_dict_factory
-from cassandra.util import sortedset, Duration
+from cassandra.util import sortedset, Duration, OrderedMap
 from tests.unit.cython.utils import cythontest
 
 from tests.integration import use_singledc, execute_until_pass, notprotocolv1, \
@@ -713,6 +713,51 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         result = s.execute("SELECT * FROM tuples_nulls WHERE k=0")
         self.assertEqual(('', None, None, b''), result[0].t)
         self.assertEqual(('', None, None, b''), s.execute(read)[0].t)
+
+    def test_insert_collection_with_null_fails(self):
+        """
+        NULLs in list / sets / maps are forbidden.
+        This is a regression test - there was a bug that serialized None values
+        in collections as empty values instead of nulls.
+        """
+        s = self.session
+        columns = []
+        for collection_type in ['list', 'set']:
+            for simple_type in PRIMITIVE_DATATYPES_KEYS:
+                columns.append(f'{collection_type}_{simple_type} {collection_type}<{simple_type}>')
+        for simple_type in PRIMITIVE_DATATYPES_KEYS:
+            columns.append(f'map_k_{simple_type} map<{simple_type}, ascii>')
+            columns.append(f'map_v_{simple_type} map<ascii, {simple_type}>')
+        s.execute(f'CREATE TABLE collection_nulls (k int PRIMARY KEY, {", ".join(columns)})')
+
+        def raises_simple_and_prepared(exc_type, query_str, args):
+            self.assertRaises(exc_type, lambda: s.execute(query_str, args))
+            p = s.prepare(query_str.replace('%s', '?'))
+            self.assertRaises(exc_type, lambda: s.execute(p, args))
+
+        i = 0
+        for simple_type in PRIMITIVE_DATATYPES_KEYS:
+            query_str = f'INSERT INTO collection_nulls (k, set_{simple_type}) VALUES (%s, %s)'
+            args = [i, sortedset([None, get_sample(simple_type)])]
+            raises_simple_and_prepared(InvalidRequest, query_str, args)
+            i += 1
+        for simple_type in PRIMITIVE_DATATYPES_KEYS:
+            query_str = f'INSERT INTO collection_nulls (k, list_{simple_type}) VALUES (%s, %s)'
+            args = [i, [None, get_sample(simple_type)]]
+            raises_simple_and_prepared(InvalidRequest, query_str, args)
+            i += 1
+        for simple_type in PRIMITIVE_DATATYPES_KEYS:
+            query_str = f'INSERT INTO collection_nulls (k, map_k_{simple_type}) VALUES (%s, %s)'
+            args = [i, OrderedMap([(get_sample(simple_type), 'abc'), (None, 'def')])]
+            raises_simple_and_prepared(InvalidRequest, query_str, args)
+            i += 1
+        for simple_type in PRIMITIVE_DATATYPES_KEYS:
+            query_str = f'INSERT INTO collection_nulls (k, map_v_{simple_type}) VALUES (%s, %s)'
+            args = [i, OrderedMap([('abc', None), ('def', get_sample(simple_type))])]
+            raises_simple_and_prepared(InvalidRequest, query_str, args)
+            i += 1
+
+
 
     def test_can_insert_unicode_query_string(self):
         """
