@@ -248,20 +248,30 @@ class QueryUpdateTests(BaseCassEngTestCase):
         TestQueryUpdateModel.objects.create(
             partition=partition,
             cluster=cluster,
-            text_map={"foo": '1', "bar": '2'}
+            text_map={"foo": '1', "bar": '2'},
+            bin_map={123: b'1', 789: b'2'}
         )
         TestQueryUpdateModel.objects(partition=partition, cluster=cluster).update(
             text_map__remove={"bar"},
-            text_map__update={"foz": '4', "foo": '2'}
+            text_map__update={"foz": '4', "foo": '2'},
+            bin_map__remove={789},
+            bin_map__update={456: b'4', 123: b'2'}
         )
         obj = TestQueryUpdateModel.objects.get(partition=partition, cluster=cluster)
         self.assertEqual(obj.text_map, {"foo": '2', "foz": '4'})
+        self.assertEqual(obj.bin_map, {123: b'2', 456: b'4'})
 
         TestQueryUpdateModel.objects(partition=partition, cluster=cluster).update(
-            text_map__remove={"foo", "foz"}
+            text_map__remove={"foo", "foz"},
+            bin_map__remove={123, 456}
+        )
+        rec = TestQueryUpdateModel.objects.get(partition=partition, cluster=cluster)
+        self.assertEqual(
+            rec.text_map,
+            {}
         )
         self.assertEqual(
-            TestQueryUpdateModel.objects.get(partition=partition, cluster=cluster).text_map,
+            rec.bin_map,
             {}
         )
 

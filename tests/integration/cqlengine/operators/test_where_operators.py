@@ -82,7 +82,7 @@ class TestIsNotNull(BaseCassEngTestCase):
         self.assertEqual(
             str(TestQueryUpdateModel.filter(IsNotNull("text"), partition=uuid4())),
             ('SELECT "cluster", "count", "text", "text_set", '
-             '"text_list", "text_map" FROM cqlengine_test.test_query_update_model '
+             '"text_list", "text_map", "bin_map" FROM cqlengine_test.test_query_update_model '
              'WHERE "text" IS NOT NULL AND "partition" = %(0)s LIMIT 10000')
         )
 
