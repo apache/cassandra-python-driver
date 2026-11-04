@@ -57,45 +57,69 @@ class Encoder(object):
 
     mapping = None
     """
-    A map of python types to encoder functions.
+    A list of tuples mapping python types to encoder functions.
     """
 
     def __init__(self):
-        self.mapping = {
-            float: self.cql_encode_float,
-            Decimal: self.cql_encode_decimal,
-            bytearray: self.cql_encode_bytes,
-            str: self.cql_encode_str,
-            int: self.cql_encode_object,
-            UUID: self.cql_encode_object,
-            datetime.datetime: self.cql_encode_datetime,
-            datetime.date: self.cql_encode_date,
-            datetime.time: self.cql_encode_time,
-            Date: self.cql_encode_date_ext,
-            Time: self.cql_encode_time,
-            dict: self.cql_encode_map_collection,
-            OrderedDict: self.cql_encode_map_collection,
-            OrderedMap: self.cql_encode_map_collection,
-            OrderedMapSerializedKey: self.cql_encode_map_collection,
-            list: self.cql_encode_list_collection,
-            tuple: self.cql_encode_list_collection,  # TODO: change to tuple in next major
-            set: self.cql_encode_set_collection,
-            sortedset: self.cql_encode_set_collection,
-            frozenset: self.cql_encode_set_collection,
-            types.GeneratorType: self.cql_encode_list_collection,
-            ValueSequence: self.cql_encode_sequence,
-            Point: self.cql_encode_str_quoted,
-            LineString: self.cql_encode_str_quoted,
-            Polygon: self.cql_encode_str_quoted
-        }
+        self.mapping = [
+            (ValueSequence, self.cql_encode_sequence),
+            (Point, self.cql_encode_str_quoted),
+            (LineString, self.cql_encode_str_quoted),
+            (Polygon, self.cql_encode_str_quoted),
+            (Decimal, self.cql_encode_decimal),
+            (UUID, self.cql_encode_object),
+            (Date, self.cql_encode_date_ext),
+            (Time, self.cql_encode_time),
+            (ipaddress.IPv4Address, self.cql_encode_ipaddress),
+            (ipaddress.IPv6Address, self.cql_encode_ipaddress),
+            (float, self.cql_encode_float),
+            (bytearray, self.cql_encode_bytes),
+            (str, self.cql_encode_str),
+            (int, self.cql_encode_object),
+            (datetime.datetime, self.cql_encode_datetime),
+            (datetime.date, self.cql_encode_date),
+            (datetime.time, self.cql_encode_time),
+            (dict, self.cql_encode_map_collection),
+            (OrderedDict, self.cql_encode_map_collection),
+            (OrderedMap, self.cql_encode_map_collection),
+            (OrderedMapSerializedKey, self.cql_encode_map_collection),
+            (list, self.cql_encode_list_collection),
+            (tuple, self.cql_encode_list_collection),  # TODO: change to tuple in next major
+            (set, self.cql_encode_set_collection),
+            (sortedset, self.cql_encode_set_collection),
+            (frozenset, self.cql_encode_set_collection),
+            (types.GeneratorType, self.cql_encode_list_collection),
+            (memoryview, self.cql_encode_bytes),
+            (bytes, self.cql_encode_bytes),
+            (type(None), self.cql_encode_none),
+         ]
 
-        self.mapping.update({
-            memoryview: self.cql_encode_bytes,
-            bytes: self.cql_encode_bytes,
-            type(None): self.cql_encode_none,
-            ipaddress.IPv4Address: self.cql_encode_ipaddress,
-            ipaddress.IPv6Address: self.cql_encode_ipaddress
-        })
+    def get_encode_function(self, need_data_type):
+        """
+        Returns the appropriate encoder function for a given data type.
+        If the data type is a subclass of a registered type, the registered
+        type's encoder is returned. This respects the order in :attr:`~.Encoder.mapping`.
+        """
+        for data_type, encode_function in self.mapping:
+            if issubclass(need_data_type, data_type):
+                return encode_function
+        raise KeyError('No encode function found for type: %s', need_data_type)
+
+    def add_or_override_mapping(self, new_data_type, new_encode_function):
+        """
+        Adds a new mapping to the encoder or overrides an existing one.
+        If the new type subclasses an existing one ensures that it will be
+        evaluated before the existing one.
+        """
+        for i, (data_type, _ ) in enumerate(self.mapping):
+            if new_data_type == data_type:
+                self.mapping[i] = (new_data_type, new_encode_function)
+                return
+            if issubclass(new_data_type, data_type):
+                self.mapping.insert(i, (new_data_type, new_encode_function))
+                return
+
+        self.mapping.append((new_data_type, new_encode_function))
 
     def cql_encode_none(self, val):
         """
@@ -173,8 +197,7 @@ class Encoder(object):
         Converts a sequence to a string of the form ``(item1, item2, ...)``.  This
         is suitable for ``IN`` value lists.
         """
-        return '(%s)' % ', '.join(self.mapping.get(type(v), self.cql_encode_object)(v)
-                                  for v in val)
+        return '(%s)' % ', '.join(self.cql_encode_all_types(v) for v in val)
 
     cql_encode_tuple = cql_encode_sequence
     """
@@ -187,31 +210,36 @@ class Encoder(object):
         Converts a dict into a string of the form ``{key1: val1, key2: val2, ...}``.
         This is suitable for ``map`` type columns.
         """
-        return '{%s}' % ', '.join('%s: %s' % (
-            self.mapping.get(type(k), self.cql_encode_object)(k),
-            self.mapping.get(type(v), self.cql_encode_object)(v)
-        ) for k, v in val.items())
+        return '{%s}' % ', '.join(
+            '%s: %s' % (self.cql_encode_all_types(k), self.cql_encode_all_types(v))
+            for k, v in val.items()
+        )
 
     def cql_encode_list_collection(self, val):
         """
         Converts a sequence to a string of the form ``[item1, item2, ...]``.  This
         is suitable for ``list`` type columns.
         """
-        return '[%s]' % ', '.join(self.mapping.get(type(v), self.cql_encode_object)(v) for v in val)
+        return '[%s]' % ', '.join(self.cql_encode_all_types(v) for v in val)
 
     def cql_encode_set_collection(self, val):
         """
         Converts a sequence to a string of the form ``{item1, item2, ...}``.  This
         is suitable for ``set`` type columns.
         """
-        return '{%s}' % ', '.join(self.mapping.get(type(v), self.cql_encode_object)(v) for v in val)
+        return '{%s}' % ', '.join(self.cql_encode_all_types(v) for v in val)
 
     def cql_encode_all_types(self, val, as_text_type=False):
         """
         Converts any type into a CQL string, defaulting to ``cql_encode_object``
-        if :attr:`~Encoder.mapping` does not contain an entry for the type.
+        if :attr:`~.Encoder.mapping` does not contain an entry for the type.
         """
-        encoded = self.mapping.get(type(val), self.cql_encode_object)(val)
+        for data_type, encode_function in self.mapping:
+            if isinstance(val, data_type):
+                encoded = encode_function(val)
+                break
+        else:
+            encoded = self.cql_encode_object(val)
         if as_text_type and not isinstance(encoded, str):
             return encoded.decode('utf-8')
         return encoded

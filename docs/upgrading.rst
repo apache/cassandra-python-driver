@@ -323,7 +323,7 @@ basis through :attr:`.Session.encoder`:
 
     cluster = Cluster()
     session = cluster.connect()
-    session.encoder.mapping[tuple] = session.encoder.cql_encode_tuple
+    session.encoder.add_or_override_mapping(tuple, session.encoder.cql_encode_tuple)
 
 See :ref:`type-conversions` for the table of default CQL literal conversions.
 

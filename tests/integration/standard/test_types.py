@@ -208,7 +208,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         c = TestCluster()
         s = c.connect(self.keyspace_name)
         # use tuple encoding, to convert native python tuple into raw CQL
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         # create table
         alpha_type_list = ["zz int PRIMARY KEY"]
@@ -441,7 +441,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         s = c.connect(self.keyspace_name)
 
         # use this encoder in order to insert tuples
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         s.execute("CREATE TABLE tuple_type  (a int PRIMARY KEY, b frozen<tuple<ascii, int, boolean>>)")
 
@@ -495,7 +495,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         s = c.connect(self.keyspace_name)
 
         # set the encoder for tuples for the ability to write tuples
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         # programmatically create the table with tuples of said sizes
         lengths = (1, 2, 3, 384)
@@ -530,7 +530,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
 
         c = TestCluster()
         s = c.connect(self.keyspace_name)
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         s.execute("CREATE TABLE tuple_primitive ("
                   "k int PRIMARY KEY, "
@@ -562,7 +562,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         s = c.connect(self.keyspace_name)
 
         # set the encoder for tuples for the ability to write tuples
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         values = []
 
@@ -661,7 +661,7 @@ class TypeTests(BasicSharedKeyspaceUnitTestCase):
         s = c.connect(self.keyspace_name)
 
         # set the encoder for tuples for the ability to write tuples
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         # create a table with multiple sizes of nested tuples
         s.execute("CREATE TABLE nested_tuples ("

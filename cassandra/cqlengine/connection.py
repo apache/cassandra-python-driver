@@ -131,7 +131,8 @@ class Connection(object):
             if self.consistency is not None:
                 self.session.default_consistency_level = self.consistency
         enc = self.session.encoder
-        enc.mapping[tuple] = enc.cql_encode_tuple
+        enc.override_or_insert_mapping(tuple, enc.cql_encode_tuple)
+
         _register_known_types(self.session.cluster)
 
     def handle_lazy_connect(self):

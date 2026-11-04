@@ -618,7 +618,7 @@ class UDTTests(BasicSegregatedKeyspaceUnitTestCase):
 
         c = TestCluster()
         s = c.connect(self.keyspace_name, wait_for_all_pools=True)
-        s.encoder.mapping[tuple] = s.encoder.cql_encode_tuple
+        s.encoder.add_or_override_mapping(tuple, s.encoder.cql_encode_tuple)
 
         name = self._testMethodName
 
