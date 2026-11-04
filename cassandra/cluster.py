@@ -4383,7 +4383,9 @@ class ResponseFuture(object):
                 host = str(connection.endpoint) if connection else 'unknown'
                 errors = {host: "Request timed out while waiting for schema agreement. See Session.execute[_async](timeout) and Cluster.max_schema_agreement_wait."}
 
-        self._set_final_exception(OperationTimedOut(errors, self._current_host))
+        final_exc = OperationTimedOut(errors, self._current_host)
+        self.session.cluster.signal_connection_failure(self._current_host, final_exc, is_host_addition=False)
+        self._set_final_exception(final_exc)
 
     def _on_speculative_execute(self):
         self._timer = None
