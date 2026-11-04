@@ -23,16 +23,19 @@ import sys
 import threading
 from threading import Thread, Event
 import time
+import uuid
 from unittest import SkipTest
 
 from cassandra import ConsistencyLevel, OperationTimedOut, DependencyException
 from cassandra.cluster import NoHostAvailable, ConnectionShutdown, ExecutionProfile, EXEC_PROFILE_DEFAULT
+from cassandra.connection import DRIVER_NAME, DRIVER_VERSION
 from cassandra.protocol import QueryMessage
 from cassandra.policies import HostFilterPolicy, RoundRobinPolicy, HostStateListener
 from cassandra.pool import HostConnectionPool
 
 from tests.integration import use_singledc, get_node, CASSANDRA_IP, local, \
-    requiresmallclockgranularity, greaterthancass20, TestCluster
+    requiresmallclockgranularity, greaterthancass20, greaterthanorequalcass41, \
+    requirecassandra, TestCluster
 
 try:
     import cassandra.io.asyncorereactor
@@ -465,3 +468,57 @@ class LibevConnectionTests(ConnectionTests, unittest.TestCase):
     def clean_global_loop(self):
         cassandra.io.libevreactor._global_loop._cleanup()
         cassandra.io.libevreactor._global_loop = None
+
+
+@requirecassandra
+@greaterthanorequalcass41
+class ExtraStartupOptionsTest(unittest.TestCase):
+    """
+    Ensures the extra startup options configured on a Cluster reach the server.
+
+    The options a client sent in its STARTUP message are exposed by the
+    ``system_views.clients`` virtual table since Cassandra 4.1.
+    """
+
+    def connect_and_get_client_options(self, **cluster_kwargs):
+        """
+        Connects a cluster tagged with a unique APPLICATION_NAME and returns the
+        options the server recorded for it.
+        """
+        application_name = f'app-{uuid.uuid4()}'
+        extra_startup_options = dict(cluster_kwargs.pop('extra_startup_options', {}),
+                                     X_APPLICATION_NAME=application_name)
+
+        cluster = TestCluster(extra_startup_options=extra_startup_options, **cluster_kwargs)
+        session = cluster.connect(wait_for_all_pools=True)
+        self.addCleanup(cluster.shutdown)
+
+        rows = session.execute("SELECT client_options FROM system_views.clients")
+        options = [row.client_options for row in rows
+                   if row.client_options
+                   and row.client_options.get('X_APPLICATION_NAME') == application_name]
+
+        self.assertGreater(len(options), 0)
+        return application_name, options
+
+    def test_extra_startup_options_are_sent_to_server(self):
+        application_name, options = self.connect_and_get_client_options(
+            extra_startup_options={'X_APPLICATION_VERSION': '1.2.3'})
+
+        for client_options in options:
+            self.assertEqual(client_options['X_APPLICATION_NAME'], application_name)
+            self.assertEqual(client_options['X_APPLICATION_VERSION'], '1.2.3')
+            self.assertEqual(client_options['DRIVER_NAME'], DRIVER_NAME)
+            self.assertEqual(client_options['DRIVER_VERSION'], DRIVER_VERSION)
+            self.assertIn('CQL_VERSION', client_options)
+
+    def test_extra_startup_options_do_not_override_driver_options(self):
+        _, options = self.connect_and_get_client_options(
+            extra_startup_options={'DRIVER_NAME': 'not the driver',
+                                   'DRIVER_VERSION': '0.0.0',
+                                   'CQL_VERSION': '2.0.0'})
+
+        for client_options in options:
+            self.assertEqual(client_options['DRIVER_NAME'], DRIVER_NAME)
+            self.assertEqual(client_options['DRIVER_VERSION'], DRIVER_VERSION)
+            self.assertNotEqual(client_options['CQL_VERSION'], '2.0.0')

@@ -675,6 +675,7 @@ class Connection(object):
 
     cql_version = None
     no_compact = False
+    extra_startup_options = None
     protocol_version = ProtocolVersion.MAX_SUPPORTED
 
     keyspace = None
@@ -758,7 +759,7 @@ class Connection(object):
                  ssl_options=None, sockopts=None, compression=True,
                  cql_version=None, protocol_version=ProtocolVersion.MAX_SUPPORTED, is_control_connection=False,
                  user_type_map=None, connect_timeout=None, allow_beta_protocol_version=False, no_compact=False,
-                 ssl_context=None, on_orphaned_stream_released=None):
+                 ssl_context=None, on_orphaned_stream_released=None, extra_startup_options=None):
 
         # TODO next major rename host to endpoint and remove port kwarg.
         self.endpoint = host if isinstance(host, EndPoint) else DefaultEndPoint(host, port)
@@ -782,6 +783,7 @@ class Connection(object):
         self._socket_writable = True
         self.orphaned_request_ids = set()
         self._on_orphaned_stream_released = on_orphaned_stream_released
+        self.extra_startup_options = extra_startup_options or {}
 
         if ssl_options:
             self.ssl_options.update(self.endpoint.ssl_options or {})
@@ -1403,7 +1405,7 @@ class Connection(object):
             opts['COMPRESSION'] = compression
         if no_compact:
             opts['NO_COMPACT'] = 'true'
-        sm = StartupMessage(cqlversion=self.cql_version, options=opts)
+        sm = StartupMessage(cqlversion=self.cql_version, options=opts, extra_options=self.extra_startup_options)
         self.send_msg(sm, self.get_request_id(), cb=self._handle_startup_response)
         log.debug("Sent StartupMessage on %s", self)
 

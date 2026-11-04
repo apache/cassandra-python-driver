@@ -400,15 +400,19 @@ class StartupMessage(_MessageType):
     KNOWN_OPTION_KEYS = set((
         'CQL_VERSION',
         'COMPRESSION',
-        'NO_COMPACT'
+        'NO_COMPACT',
+        'DRIVER_NAME',
+        'DRIVER_VERSION'
     ))
 
-    def __init__(self, cqlversion, options):
+    def __init__(self, cqlversion, options, extra_options=None):
         self.cqlversion = cqlversion
         self.options = options
+        self.extra_options = extra_options
 
     def send_body(self, f, protocol_version):
-        optmap = self.options.copy()
+        optmap = (self.extra_options or {}).copy()
+        optmap.update(self.options)
         optmap['CQL_VERSION'] = self.cqlversion
         write_stringmap(f, optmap)
 
