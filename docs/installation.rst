@@ -26,7 +26,7 @@ To check if the installation was successful, you can run::
 
     python -c 'import cassandra; print(cassandra.__version__)'
 
-This command should print something like ``3.30.1``.
+This command should print something like ``3.31.0``.
 
 .. _installation-datastax-graph:
 

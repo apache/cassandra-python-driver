@@ -1,3 +1,11 @@
+3.31.0
+======
+November 9, 2026
+
+Features
+--------
+* Add testing/support for Python 3.15.x, remove testing for 3.10.x (CASSPYTHON-30)
+
 3.30.1
 ======
 June 19, 2026
