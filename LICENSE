@@ -175,3 +175,6 @@
       of your accepting any such warranty or additional liability.
 
    END OF TERMS AND CONDITIONS
+
+   This product bundles code from python-smhasher
+   copyright Austin Appleby and Patrick Hensley, which is available under a MIT license.
