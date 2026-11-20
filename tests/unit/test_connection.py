@@ -23,18 +23,19 @@ from cassandra import OperationTimedOut
 from cassandra.cluster import Cluster
 from cassandra.connection import (Connection, HEADER_DIRECTION_TO_CLIENT, ProtocolError,
                                   locally_supported_compressions, ConnectionHeartbeat, _Frame, Timer, TimerManager,
-                                  ConnectionException, DefaultEndPoint)
+                                  ConnectionException, DefaultEndPoint, DRIVER_NAME, DRIVER_VERSION)
 from cassandra.marshal import uint8_pack, uint32_pack, int32_pack
 from cassandra.protocol import (write_stringmultimap, write_int, write_string,
-                                SupportedMessage, ProtocolHandler)
+                                SupportedMessage, ProtocolHandler, StartupMessage,
+                                read_stringmap)
 
 from tests.util import wait_until
 
 
 class ConnectionTest(unittest.TestCase):
 
-    def make_connection(self):
-        c = Connection(DefaultEndPoint('1.2.3.4'))
+    def make_connection(self, **kwargs):
+        c = Connection(DefaultEndPoint('1.2.3.4'), **kwargs)
         c._socket = Mock()
         c._socket.send.side_effect = lambda x: len(x)
         return c
@@ -244,6 +245,52 @@ class ConnectionTest(unittest.TestCase):
         c.process_msg(message, len(message) - 8)
 
         self.assertEqual(c.decompressor, None)
+
+    def send_startup_and_get_options(self, extra_startup_options, **startup_kwargs):
+        """
+        Sends a StartupMessage on a connection configured with the given extra
+        options, and reads back the option map it would put on the wire.
+        """
+        c = self.make_connection(cql_version='3.4.5', extra_startup_options=extra_startup_options)
+        c.send_msg = Mock()
+
+        c._send_startup_message(**startup_kwargs)
+
+        self.assertEqual(c.send_msg.call_count, 1)
+        message = c.send_msg.call_args[0][0]
+        self.assertIsInstance(message, StartupMessage)
+
+        buf = BytesIO()
+        message.send_body(buf, c.protocol_version)
+        buf.seek(0)
+        return read_stringmap(buf)
+
+    def test_extra_startup_options_are_sent(self):
+        """
+        Ensures the extra options configured on a connection are sent in the
+        STARTUP message, alongside the options managed by the driver.
+        """
+        options = self.send_startup_and_get_options({'EXTRA_OPTION_1': 'option-1', 'EXTRA_OPTION_2': 'option-2'},
+                                            compression='lz4', no_compact=True)
+
+        self.assertEqual(options, {
+            'CQL_VERSION': '3.4.5',
+            'DRIVER_NAME': DRIVER_NAME,
+            'DRIVER_VERSION': DRIVER_VERSION,
+            'COMPRESSION': 'lz4',
+            'NO_COMPACT': 'true',
+            'EXTRA_OPTION_1': 'option-1',
+            'EXTRA_OPTION_2': 'option-2'
+        })
+
+    def test_no_extra_startup_options(self):
+        """
+        Ensures a connection without extra options still sends a valid STARTUP message.
+        """
+        expected = {'CQL_VERSION': '3.4.5', 'DRIVER_NAME': DRIVER_NAME, 'DRIVER_VERSION': DRIVER_VERSION}
+        for extra_startup_options in (None, {}):
+            with self.subTest(extra_startup_options=extra_startup_options):
+                self.assertEqual(self.send_startup_and_get_options(extra_startup_options), expected)
 
     def test_not_implemented(self):
         """

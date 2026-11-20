@@ -25,7 +25,8 @@ from cassandra import ConsistencyLevel, DriverException, Timeout, Unavailable, R
     InvalidRequest, Unauthorized, AuthenticationFailed, OperationTimedOut, UnsupportedOperation, RequestValidationException, ConfigurationException, ProtocolVersion
 from cassandra.cluster import _Scheduler, Session, Cluster, default_lbp_factory, \
     ExecutionProfile, _ConfigMode, EXEC_PROFILE_DEFAULT
-from cassandra.connection import SniEndPoint, SniEndPointFactory
+from cassandra.connection import SniEndPoint, SniEndPointFactory, DefaultEndPoint
+from cassandra.protocol import StartupMessage
 from cassandra.pool import Host
 from cassandra.policies import HostDistance, RetryPolicy, RoundRobinPolicy, DowngradingConsistencyRetryPolicy, SimpleConvictionPolicy
 from cassandra.query import SimpleStatement, named_tuple_factory, tuple_factory
@@ -149,6 +150,46 @@ class ClusterTest(unittest.TestCase):
             addrs = [host.endpoint.resolve() for host in lbp.make_query_plan()]
             # single SNI endpoint should be resolved to multiple unique IP addresses
             self.assertEqual(len(addrs), len(set(addrs)))
+
+    def test_extra_startup_options_passed_to_connections(self):
+        """
+        Ensures the extra startup options configured on a cluster reach the
+        connections it creates.
+        """
+        extra_startup_options = {'EXTRA_OPTION': 'option-1'}
+        cluster = Cluster(extra_startup_options=extra_startup_options)
+
+        kwargs = cluster._make_connection_kwargs(DefaultEndPoint('127.0.0.1'), {})
+        self.assertEqual(kwargs['extra_startup_options'], extra_startup_options)
+
+    def test_extra_startup_options_default_to_empty(self):
+        kwargs = Cluster()._make_connection_kwargs(DefaultEndPoint('127.0.0.1'), {})
+        self.assertEqual(kwargs['extra_startup_options'], {})
+
+    def test_driver_managed_extra_startup_options_are_removed(self):
+        """
+        Ensures the options managed by the driver are dropped from the extra
+        startup options, so they cannot be overridden.
+        """
+        extra_startup_options = dict.fromkeys(StartupMessage.KNOWN_OPTION_KEYS, 'overridden')
+        extra_startup_options['EXTRA_OPTION'] = 'option-1'
+
+        with self.assertLogs('cassandra.cluster', level='WARNING') as logs:
+            cluster = Cluster(extra_startup_options=extra_startup_options)
+
+        self.assertEqual(cluster.extra_startup_options, {'EXTRA_OPTION': 'option-1'})
+
+        warnings = [line for line in logs.output if 'Ignoring extra startup option' in line]
+        self.assertEqual(len(warnings), 1)
+        for key in StartupMessage.KNOWN_OPTION_KEYS:
+            self.assertIn(key, warnings[0])
+        self.assertNotIn('EXTRA_OPTION', warnings[0])
+
+    def test_extra_startup_options_are_not_warned_about(self):
+        with self.assertNoLogs('cassandra.cluster', level='WARNING'):
+            cluster = Cluster(extra_startup_options={'EXTRA_OPTION': 'option-1'})
+
+        self.assertEqual(cluster.extra_startup_options, {'EXTRA_OPTION': 'option-1'})
 
 
 class SchedulerTest(unittest.TestCase):

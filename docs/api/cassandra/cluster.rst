@@ -74,6 +74,8 @@
 
    .. autoattribute:: cloud
 
+   .. autoattribute:: extra_startup_options
+
    .. automethod:: connect
 
    .. automethod:: shutdown
