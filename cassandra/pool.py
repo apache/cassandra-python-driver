@@ -409,6 +409,7 @@ class HostConnection(object):
         self._keyspace = session.keyspace
         if self._keyspace:
             self._connection.set_keyspace_blocking(self._keyspace)
+        self._maybe_register_graceful_disconnect(self._connection)
         log.debug("Finished initializing connection for host %s", self.host)
 
     def _get_connection(self):
@@ -419,6 +420,9 @@ class HostConnection(object):
         conn = self._connection
         if not conn:
             raise NoConnectionsAvailable()
+        if conn.is_draining:
+            raise NoConnectionsAvailable(
+                "Connection to %s is draining (graceful disconnect)" % (self.host,))
         return conn
 
     def borrow_connection(self, timeout):
@@ -503,6 +507,39 @@ class HostConnection(object):
         with self._stream_available_condition:
             self._stream_available_condition.notify()
 
+    def _maybe_register_graceful_disconnect(self, connection):
+        """
+        Register for GRACEFUL_DISCONNECT events (CEP-59) on a pooled
+        connection, if the feature is enabled and this connection's server
+        advertised support for it.
+        """
+        if (self._session.cluster.graceful_disconnect_enabled
+                and connection.supports_graceful_disconnect):
+            connection.register_watcher(
+                "GRACEFUL_DISCONNECT", self._on_graceful_disconnect_event)
+
+    def _on_graceful_disconnect_event(self, event):
+        """
+        Called from the connection's event thread when a GRACEFUL_DISCONNECT
+        event is received on one of this pool's connections.
+        """
+        log.debug("Received GRACEFUL_DISCONNECT on connection to %s", self.host)
+        self._session.cluster.on_graceful_disconnect(self.host)
+
+    def on_graceful_disconnect(self):
+        """
+        Gracefully drain all connections to this host (CEP-59): in-flight
+        requests are allowed to complete before the connections are closed.
+        """
+        if self.is_shutdown:
+            return
+        connections = self.get_connections()
+        if not connections:
+            return
+        log.info("Draining all connections to %s gracefully", self.host)
+        for connection in connections:
+            connection.start_graceful_drain()
+
     def _replace(self, connection):
         with self._lock:
             if self.is_shutdown:
@@ -513,6 +550,7 @@ class HostConnection(object):
             conn = self._session.cluster.connection_factory(self.host.endpoint, on_orphaned_stream_released=self.on_orphaned_stream_released)
             if self._keyspace:
                 conn.set_keyspace_blocking(self._keyspace)
+            self._maybe_register_graceful_disconnect(conn)
             self._connection = conn
         except Exception:
             log.warning("Failed reconnecting %s. Retrying." % (self.host.endpoint,))
@@ -616,6 +654,9 @@ class HostConnectionPool(object):
             for conn in self._connections:
                 conn.set_keyspace_blocking(self._keyspace)
 
+        for conn in self._connections:
+            self._maybe_register_graceful_disconnect(conn)
+
         self._trash = set()
         self._next_trash_allowed_at = time.time()
         self.open_count = core_conns
@@ -715,6 +756,7 @@ class HostConnectionPool(object):
             conn = self._session.cluster.connection_factory(self.host.endpoint, on_orphaned_stream_released=self.on_orphaned_stream_released)
             if self._keyspace:
                 conn.set_keyspace_blocking(self._session.keyspace)
+            self._maybe_register_graceful_disconnect(conn)
             self._next_trash_allowed_at = time.time() + _MIN_TRASH_INTERVAL
             with self._lock:
                 new_connections = self._connections[:] + [conn]
@@ -817,6 +859,39 @@ class HostConnectionPool(object):
         side) was received.
         """
         self._signal_available_conn()
+
+    def _maybe_register_graceful_disconnect(self, connection):
+        """
+        Register for GRACEFUL_DISCONNECT events (CEP-59) on a pooled
+        connection, if the feature is enabled and this connection's server
+        advertised support for it.
+        """
+        if (self._session.cluster.graceful_disconnect_enabled
+                and connection.supports_graceful_disconnect):
+            connection.register_watcher(
+                "GRACEFUL_DISCONNECT", self._on_graceful_disconnect_event)
+
+    def _on_graceful_disconnect_event(self, event):
+        """
+        Called from the connection's event thread when a GRACEFUL_DISCONNECT
+        event is received on one of this pool's connections.
+        """
+        log.debug("Received GRACEFUL_DISCONNECT on connection to %s", self.host)
+        self._session.cluster.on_graceful_disconnect(self.host)
+
+    def on_graceful_disconnect(self):
+        """
+        Gracefully drain all connections to this host (CEP-59): in-flight
+        requests are allowed to complete before the connections are closed.
+        """
+        if self.is_shutdown:
+            return
+        connections = self.get_connections()
+        if not connections:
+            return
+        log.info("Draining all connections to %s gracefully", self.host)
+        for connection in connections:
+            connection.start_graceful_drain()
 
     def _maybe_trash_connection(self, connection):
         core_conns = self._session.cluster.get_core_connections_per_host(self.host_distance)

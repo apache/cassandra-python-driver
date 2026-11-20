@@ -96,6 +96,13 @@ class Metrics(object):
     failed request was ignored based on the :class:`.RetryPolicy` decision.
     """
 
+    graceful_disconnects = None
+    """
+    A :class:`greplin.scales.IntStat` count of the number of
+    ``GRACEFUL_DISCONNECT`` events (CEP-59) received from nodes that are
+    shutting down gracefully, across all connections of the cluster.
+    """
+
     known_hosts = None
     """
     A :class:`greplin.scales.IntStat` count of the number of nodes in
@@ -131,6 +138,7 @@ class Metrics(object):
                                        scales.IntStat('other_errors'),
                                        scales.IntStat('retries'),
                                        scales.IntStat('ignores'),
+                                       scales.IntStat('graceful_disconnects'),
 
                                        # gauges
                                        scales.Stat('known_hosts',
@@ -155,6 +163,7 @@ class Metrics(object):
         self.other_errors = self.stats.other_errors
         self.retries = self.stats.retries
         self.ignores = self.stats.ignores
+        self.graceful_disconnects = self.stats.graceful_disconnects
         self.known_hosts = self.stats.known_hosts
         self.connected_to = self.stats.connected_to
         self.open_connections = self.stats.open_connections
@@ -179,6 +188,9 @@ class Metrics(object):
 
     def on_retry(self):
         self.stats.retries += 1
+
+    def on_graceful_disconnect(self):
+        self.stats.graceful_disconnects += 1
 
     def get_stats(self):
         """

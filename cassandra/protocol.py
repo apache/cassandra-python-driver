@@ -987,7 +987,8 @@ class BatchMessage(_MessageType):
 known_event_types = frozenset((
     'TOPOLOGY_CHANGE',
     'STATUS_CHANGE',
-    'SCHEMA_CHANGE'
+    'SCHEMA_CHANGE',
+    'GRACEFUL_DISCONNECT'
 ))
 
 
@@ -1031,6 +1032,12 @@ class EventMessage(_MessageType):
         change_type = read_string(f)
         address = read_inet(f)
         return dict(change_type=change_type, address=address)
+
+    @classmethod
+    def recv_graceful_disconnect(cls, f, protocol_version):
+        # The GRACEFUL_DISCONNECT event (CEP-59) has no body; the type
+        # string is enough.
+        return {}
 
     @classmethod
     def recv_schema_change(cls, f, protocol_version):

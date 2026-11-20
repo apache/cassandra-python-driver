@@ -758,6 +758,18 @@ class Cluster(object):
     will be an instance of :class:`~cassandra.metrics.Metrics`.
     """
 
+    graceful_disconnect_enabled = True
+    """
+    Whether to register for ``GRACEFUL_DISCONNECT`` events from the server
+    (CEP-59). When enabled and the server advertises support, the driver will
+    gracefully drain connections when a node shuts down: in-flight requests
+    are allowed to complete before the connections are closed, and new
+    requests fail over to other nodes.
+
+    Defaults to :const:`True`. The capability is negotiated per connection;
+    on servers that do not advertise support this option has no effect.
+    """
+
     metrics = None
     """
     An instance of :class:`cassandra.metrics.Metrics` if :attr:`.metrics_enabled` is
@@ -1069,7 +1081,8 @@ class Cluster(object):
                  ssl_context=None,
                  endpoint_factory=None,
                  cloud=None,
-                 column_encryption_policy=None):
+                 column_encryption_policy=None,
+                 graceful_disconnect_enabled=True):
         """
         ``executor_threads`` defines the number of threads in a pool for handling asynchronous tasks such as
         establishing connection pools or refreshing metadata.
@@ -1266,6 +1279,7 @@ class Cluster(object):
         self.connect_timeout = connect_timeout
         self.prepare_on_all_hosts = prepare_on_all_hosts
         self.reprepare_on_up = reprepare_on_up
+        self.graceful_disconnect_enabled = graceful_disconnect_enabled
 
         self._listeners = set()
         self._listener_lock = Lock()
@@ -1970,6 +1984,26 @@ class Cluster(object):
         if is_down:
             self.on_down(host, is_host_addition, expect_host_to_be_down)
         return is_down
+
+    def on_graceful_disconnect(self, host):
+        """
+        Called when a GRACEFUL_DISCONNECT event (CEP-59) is received on any
+        connection to `host`: the node announced that it is shutting down
+        gracefully. All pools for that host are drained so that in-flight
+        requests complete before their connections are closed.
+
+        Intended for internal use only.
+        """
+        log.info("Received GRACEFUL_DISCONNECT for host %s, "
+                 "the node is shutting down gracefully", host)
+        if self.metrics_enabled and self.metrics:
+            self.metrics.on_graceful_disconnect()
+        if host is None:
+            return
+        for session in tuple(self.sessions):
+            pool = session._pools.get(host)
+            if pool:
+                pool.on_graceful_disconnect()
 
     def add_host(self, endpoint, datacenter=None, rack=None, signal=True, refresh_nodes=True):
         """
@@ -3567,11 +3601,19 @@ class ControlConnection(object):
         # this object (after a dereferencing a weakref)
         self_weakref = weakref.ref(self, partial(_clear_watcher, weakref.proxy(connection)))
         try:
-            connection.register_watchers({
+            watchers = {
                 "TOPOLOGY_CHANGE": partial(_watch_callback, self_weakref, '_handle_topology_change'),
                 "STATUS_CHANGE": partial(_watch_callback, self_weakref, '_handle_status_change'),
                 "SCHEMA_CHANGE": partial(_watch_callback, self_weakref, '_handle_schema_change')
-            }, register_timeout=self._timeout)
+            }
+            # GRACEFUL_DISCONNECT (CEP-59) support is negotiated per
+            # connection: only register if this connection's SUPPORTED
+            # response advertised it.
+            if (self._cluster.graceful_disconnect_enabled
+                    and connection.supports_graceful_disconnect):
+                watchers["GRACEFUL_DISCONNECT"] = partial(
+                    _watch_callback, self_weakref, '_handle_graceful_disconnect')
+            connection.register_watchers(watchers, register_timeout=self._timeout)
 
             sel_peers = self._get_peers_query(self.PeersQueryType.PEERS, connection)
             sel_local = self._SELECT_LOCAL if self._token_meta_enabled else self._SELECT_LOCAL_NO_TOKENS
@@ -3921,6 +3963,17 @@ class ControlConnection(object):
             return
         delay = self._delay_for_event_type('schema_change', self._schema_event_refresh_window)
         self._cluster.scheduler.schedule_unique(delay, self.refresh_schema, **event)
+
+    def _handle_graceful_disconnect(self, event):
+        log.info("[control connection] Received GRACEFUL_DISCONNECT event, "
+                 "the server is shutting down gracefully")
+        connection = self._connection
+        if connection:
+            host = self._cluster.metadata.get_host(connection.endpoint)
+            self._cluster.on_graceful_disconnect(host)
+        # The control connection is draining and will be closed by the
+        # server; proactively move it to another host.
+        self.reconnect()
 
     def wait_for_schema_agreement(self, connection=None, preloaded_results=None, wait_time=None):
 
