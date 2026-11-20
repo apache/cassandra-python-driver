@@ -1198,7 +1198,9 @@ class Connection(object):
                 # re-raise an exception that inherits from ConnectionException
                 raise CrcMismatchException(str(exc), self.endpoint)
         else:
+            # not even a full header yet. rewind too, or reset_io_buffer() drops these bytes
             self._io_buffer._segment_consumed = False
+            self._io_buffer.io_buffer.seek(0)
 
     def process_io_buffer(self):
         while True:
