@@ -600,6 +600,7 @@ class Date(Column):
             value = value.date()
         return util.Date(value)
 
+
 class Time(Column):
     """
     Stores a timezone-naive time-of-day, with nanosecond precision
@@ -624,6 +625,7 @@ class Time(Column):
         if isinstance(value, util.Time):
             return value
         return util.Time(value)
+
 
 class Duration(Column):
     """

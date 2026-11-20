@@ -56,6 +56,7 @@ class PolymorphicModelException(ModelException):
 class UndefinedKeyspaceWarning(Warning):
     pass
 
+
 DEFAULT_KEYSPACE = None
 
 
@@ -412,16 +413,16 @@ class BaseModel(object):
 
     def __repr__(self):
         return '{0}({1})'.format(self.__class__.__name__,
-                               ', '.join('{0}={1!r}'.format(k, getattr(self, k))
-                                         for k in self._defined_columns.keys()
-                                         if k != self._discriminator_column_name))
+                                 ', '.join('{0}={1!r}'.format(k, getattr(self, k))
+                                           for k in self._defined_columns.keys()
+                                           if k != self._discriminator_column_name))
 
     def __str__(self):
         """
         Pretty printing of models by their primary key
         """
         return '{0} <{1}>'.format(self.__class__.__name__,
-                                ', '.join('{0}={1}'.format(k, getattr(self, k)) for k in self._primary_keys.keys()))
+                                  ', '.join('{0}={1}'.format(k, getattr(self, k)) for k in self._primary_keys.keys()))
 
     @classmethod
     def _routing_key_from_values(cls, pk_values, protocol_version):
@@ -562,7 +563,6 @@ class BaseModel(object):
 
         return cf_name
 
-
     @classmethod
     def _raw_column_family_name(cls):
         if not cls._table_name:
@@ -574,7 +574,7 @@ class BaseModel(object):
                     table_name = cls.__table_name__.lower()
                     if cls.__table_name__ != table_name:
                         warn(("Model __table_name__ will be case sensitive by default in 4.0. "
-                        "You should fix the __table_name__ value of the '{0}' model.").format(cls.__name__))
+                              "You should fix the __table_name__ value of the '{0}' model.").format(cls.__name__))
                     cls._table_name = table_name
             else:
                 if cls._is_polymorphic and not cls._is_polymorphic_base:

@@ -111,12 +111,12 @@ class SegmentCodecTest(unittest.TestCase):
         compressed_length = len(segment_codec_lz4.compress(self.max_msg))
         segment_codec_lz4.encode_header(buffer, compressed_length, len(self.max_msg), False)
         self.assertEqual(buffer.tell(), 8)
+
+        # Format: 17-bit len + 17-bit mask + 1-bit flag (0=not self-contained) + 5-bit padding
         self.assertEqual(
             self._header_to_bits(buffer.getvalue()),
-            ("{:017b}".format(compressed_length) +
-             "11111111111111111"
-             "0"  # not self-contained
-             "00000"))
+            "{:017b}".format(compressed_length) + "11111111111111111" + "0" + "00000"
+        )
 
     def test_decode_uncompressed_header(self):
         buffer = BytesIO()
@@ -142,7 +142,7 @@ class SegmentCodecTest(unittest.TestCase):
         buffer = BytesIO()
         segment_codec_no_compression.encode_header(buffer, len(self.small_msg), -1, True)
         # corrupt one byte
-        buffer.seek(buffer.tell()-1)
+        buffer.seek(buffer.tell() - 1)
         buffer.write(b'0')
         buffer.seek(0)
 
@@ -197,7 +197,7 @@ class SegmentCodecTest(unittest.TestCase):
     def test_decode_fails_if_corrupted(self):
         buffer = BytesIO()
         segment_codec_lz4.encode(buffer, self.small_msg)
-        buffer.seek(buffer.tell()-1)
+        buffer.seek(buffer.tell() - 1)
         buffer.write(b'0')
         buffer.seek(0)
         header = segment_codec_lz4.decode_header(buffer)

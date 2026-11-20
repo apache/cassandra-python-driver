@@ -20,6 +20,7 @@ from base import benchmark, BenchmarkThread
 
 log = logging.getLogger(__name__)
 
+
 class Runner(BenchmarkThread):
 
     def run(self):

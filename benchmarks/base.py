@@ -141,7 +141,6 @@ def benchmark(thread_class):
         log.debug("Sleeping for two seconds...")
         time.sleep(2.0)
 
-
         # Generate the query
         if options.read:
             query = "SELECT * FROM {0}  WHERE thekey = '{{key}}'".format(TABLE)
@@ -239,7 +238,6 @@ def parse_options():
                       help='Specify the column type for the schema (supported: int, text, float, uuid, timestamp)')
     parser.add_option('--read', action='store_true', dest='read', default=False,
                       help='Read mode')
-
 
     options, args = parser.parse_args()
 

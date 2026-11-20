@@ -31,7 +31,7 @@ class ConsistencyExceptionTest(unittest.TestCase):
         :param msg: message with consistency value
         :return: String representing consistency value
         """
-        match = re.search("'consistency':\s+'([\w\s]+)'", msg)
+        match = re.search(r"'consistency':\s+'([\w\s]+)'", msg)
         return match and match.group(1)
 
     def test_timeout_consistency(self):

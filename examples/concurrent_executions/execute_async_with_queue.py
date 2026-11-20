@@ -64,4 +64,4 @@ clear_queue()
 end = time.time()
 
 print("Finished executing {} queries with a concurrency level of {} in {:.2f} seconds.".
-      format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end-start)))
+      format(TOTAL_QUERIES, CONCURRENCY_LEVEL, (end - start)))

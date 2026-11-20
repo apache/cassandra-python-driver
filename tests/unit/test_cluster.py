@@ -96,11 +96,12 @@ class MockOrderedPolicy(RoundRobinPolicy):
     def make_query_plan(self, working_keyspace=None, query=None):
         return sorted(self.all_hosts, key=lambda x: x.endpoint.ssl_options['server_hostname'])
 
+
 class ClusterTest(unittest.TestCase):
 
     def test_tuple_for_contact_points(self):
         cluster = Cluster(contact_points=[('localhost', 9045), ('127.0.0.2', 9046), '127.0.0.3'], port=9999)
-        localhost_addr = set([addr[0] for addr in [t for (_,_,_,_,t) in socket.getaddrinfo("localhost",80)]])
+        localhost_addr = set([addr[0] for addr in [t for (_, _, _, _, t) in socket.getaddrinfo("localhost", 80)]])
         for cp in cluster.endpoints_resolved:
             if cp.address in localhost_addr:
                 self.assertEqual(cp.port, 9045)
@@ -136,6 +137,7 @@ class ClusterTest(unittest.TestCase):
     # a pretty good approximation.
     def test_query_plan_for_sni_contains_unique_addresses(self):
         node_cnt = 5
+
         def _mocked_proxy_dns_resolution(self):
             return [(socket.AF_UNIX, socket.SOCK_STREAM, 0, None, ('127.0.0.%s' % (i,), 9042)) for i in range(node_cnt)]
 
@@ -238,13 +240,13 @@ class ProtocolVersionTests(unittest.TestCase):
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.DSE_V2)
         self.assertEqual(ProtocolVersion.DSE_V1, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.DSE_V1)
-        self.assertEqual(ProtocolVersion.V5,lower)
+        self.assertEqual(ProtocolVersion.V5, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.V5)
-        self.assertEqual(ProtocolVersion.V4,lower)
+        self.assertEqual(ProtocolVersion.V4, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.V4)
-        self.assertEqual(ProtocolVersion.V3,lower)
+        self.assertEqual(ProtocolVersion.V3, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.V3)
-        self.assertEqual(ProtocolVersion.V2,lower)
+        self.assertEqual(ProtocolVersion.V2, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.V2)
         self.assertEqual(ProtocolVersion.V1, lower)
         lower = ProtocolVersion.get_lower_supported(ProtocolVersion.V1)

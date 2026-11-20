@@ -122,7 +122,7 @@ class TestTimestampGeneratorLogging(unittest.TestCase):
             warning_threshold=1e-6,
             warning_interval=1e-6
         )
-        #The units of _last_warn is seconds
+        # The units of _last_warn is seconds
         tsg._last_warn = 12
 
         tsg._next_timestamp(20, tsg.last)

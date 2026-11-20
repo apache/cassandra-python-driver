@@ -32,15 +32,13 @@ is_supported_arch = sys.byteorder != "big"
 is_supported = is_supported_platform and is_supported_arch
 
 # ========================== A few upfront checks ==========================
-platform_unsupported_msg = \
-"""
+platform_unsupported_msg = """
 ===============================================================================
 The optional C extensions are not supported on this platform.
 ===============================================================================
 """
 
-arch_unsupported_msg = \
-"""
+arch_unsupported_msg = """
 ===============================================================================
 The optional C extensions are not supported on big-endian systems.
 ===============================================================================
@@ -53,12 +51,14 @@ elif not is_supported_arch:
 
 # ========================== Extensions ==========================
 pyproject_toml = Path(__file__).parent / "pyproject.toml"
-with open(pyproject_toml,"rb") as f:
+with open(pyproject_toml, "rb") as f:
     pyproject_data = toml.load(f)
 driver_project_data = pyproject_data["tool"]["cassandra-driver"]
 
+
 def key_or_false(k):
     return driver_project_data[k] if k in driver_project_data else False
+
 
 try_murmur3 = key_or_false("build-murmur3-extension") and is_supported
 try_libev = key_or_false("build-libev-extension") and is_supported
@@ -96,19 +96,19 @@ if try_cython:
         exts.extend(cythonize(
             [Extension('cassandra.%s' % m, ['cassandra/%s.py' % m],
                        extra_compile_args=compile_args)
-                       for m in cython_candidates],
-                       nthreads=build_concurrency,
-                       exclude_failures=True))
+             for m in cython_candidates],
+            nthreads=build_concurrency,
+            exclude_failures=True))
 
         exts.extend(cythonize(
             Extension("*", ["cassandra/*.pyx"],
                       extra_compile_args=compile_args),
-                      nthreads=build_concurrency))
+            nthreads=build_concurrency))
     except Exception as exc:
         sys.stderr.write("Failed to cythonize one or more modules. These will not be compiled as extensions (optional).\n")
         sys.stderr.write("Cython error: %s\n" % exc)
 
 # ========================== And finally setup() itself ==========================
 setup(
-    ext_modules = exts
+    ext_modules=exts
 )

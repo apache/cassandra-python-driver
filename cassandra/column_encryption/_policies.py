@@ -33,7 +33,8 @@ AES256_BLOCK_SIZE_BYTES = int(AES256_BLOCK_SIZE / 8)
 AES256_KEY_SIZE = 256
 AES256_KEY_SIZE_BYTES = int(AES256_KEY_SIZE / 8)
 
-ColData = namedtuple('ColData', ['key','type'])
+ColData = namedtuple('ColData', ['key', 'type'])
+
 
 class AES256ColumnEncryptionPolicy(ColumnEncryptionPolicy):
 

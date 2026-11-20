@@ -150,6 +150,7 @@ def drop_keyspace(name, connections=None):
     else:
         _drop_keyspace(name)
 
+
 def _get_index_name_by_column(table, column_name):
     """
     Find the index name for a given table and column.
@@ -251,7 +252,7 @@ def _sync_table(model, connection=None):
                 col_meta = table_columns[db_name]
                 if col_meta.cql_type != col.db_type:
                     msg = format_log_context('Existing table {0} has column "{1}" with a type ({2}) differing from the model type ({3}).'
-                                  ' Model should be updated.', keyspace=ks_name, connection=connection)
+                                             ' Model should be updated.', keyspace=ks_name, connection=connection)
                     msg = msg.format(cf_name, db_name, col_meta.cql_type, col.db_type)
                     warnings.warn(msg)
                     log.warning(msg)
@@ -362,7 +363,7 @@ def _sync_type(ks_name, type_model, omit_subtypes=None, connection=None):
                 field_type = type_meta.field_types[defined_fields.index(field.db_field_name)]
                 if field_type != field.db_type:
                     msg = format_log_context('Existing user type {0} has field "{1}" with a type ({2}) differing from the model user type ({3}).'
-                                  ' UserType should be updated.', keyspace=ks_name, connection=connection)
+                                             ' UserType should be updated.', keyspace=ks_name, connection=connection)
                     msg = msg.format(type_name_qualified, field.db_field_name, field_type, field.db_type)
                     warnings.warn(msg)
                     log.warning(msg)
