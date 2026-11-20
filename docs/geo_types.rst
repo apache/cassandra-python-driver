@@ -32,8 +32,8 @@ the same string encoder as set for the internal types::
     from cassandra import util
     from shapely.geometry import Point, LineString, Polygon
 
-    encoder_func = session.encoder.mapping[util.Point]
+    encoder_func = session.encoder.get_encode_function(util.Point)
     for t in (Point, LineString, Polygon):
-        session.encoder.mapping[t] = encoder_func
+        session.encoder.add_or_override_mapping(t, encoder_func)
 
     session.execute("UPDATE ks.geo SET point = %s where k = %s", (0, Point(1.2, 3.4)))

@@ -2409,7 +2409,7 @@ class Session(object):
 
         cluster = Cluster()
         session = cluster.connect("mykeyspace")
-        session.encoder.mapping[tuple] = session.encoder.cql_encode_tuple
+        session.encoder.add_or_override_mapping(tuple, session.encoder.cql_encode_tuple)
 
         session.execute("CREATE TABLE mytable (k int PRIMARY KEY, col tuple<int, ascii>)")
         session.execute("INSERT INTO mytable (k, col) VALUES (%s, %s)", [0, (123, 'abc')])
@@ -3337,7 +3337,7 @@ class Session(object):
                 self.encoder.cql_encode_all_types(getattr(val, field_name, None))
             ) for field_name in field_names)
 
-        self.encoder.mapping[klass] = encode
+        self.encoder.add_or_override_mapping(klass, encode)
 
     def submit(self, fn, *args, **kwargs):
         """ Internal """
