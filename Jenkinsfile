@@ -260,7 +260,7 @@ def installDriver() {
     python -m venv libev-venv
     . ./libev-venv/bin/activate
     pip install toml
-    python fix-jenkinsfile-libev.py ./pyproject.toml "/usr/include" "/usr/lib/x86_64-linux-gnu" | sponge ./pyproject.toml
+    python scripts/fix-jenkinsfile-libev.py ./pyproject.toml "/usr/include" "/usr/lib/x86_64-linux-gnu" | sponge ./pyproject.toml
     deactivate
 
     ls /usr/include/ev.h
