@@ -215,6 +215,29 @@ Althought it is not recommended, you can also pass parameters to non-prepared
 statements. The driver supports two forms of parameter place-holders: positional
 and named.
 
+.. warning::
+
+    **Avoid "Round-Tripping" data using string formatting.**
+
+    Never use f-strings or ``%`` to insert data — especially driver-returned collections (maps, sets, lists) — back into a CQL query.
+
+    **The Gotcha:** The driver's collection objects use Python's ``repr()`` formatting for nested values.
+    This automatically doubles backslashes (e.g., ``\`` becomes ``\\``).
+    Because CQL does not use backslashes as escape characters,
+    Cassandra will store those extra backslashes literally, **corrupting your data**.
+
+    **The Fix:** Always use **prepared statements**.
+    They transmit data in a binary format that bypasses Python's string serialization entirely.
+
+    .. code-block:: python
+
+        # BAD: f-strings cause double-escaping/corruption
+        session.execute(f"UPDATE t SET my_map={row.my_map} WHERE id=1")
+
+        # GOOD: Prepared statements preserve data exactly
+        stmt = session.prepare("UPDATE t SET my_map=? WHERE id=1")
+        session.execute(stmt, [row.my_map])
+
 Positional parameters are used with a ``%s`` placeholder.  For example,
 when you execute:
 
