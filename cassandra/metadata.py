@@ -2773,12 +2773,14 @@ class SchemaParserV4(SchemaParserV3):
     _SELECT_VIRTUAL_KEYSPACES = 'SELECT * from system_virtual_schema.keyspaces'
     _SELECT_VIRTUAL_TABLES = 'SELECT * from system_virtual_schema.tables'
     _SELECT_VIRTUAL_COLUMNS = 'SELECT * from system_virtual_schema.columns'
+    _SELECT_VIRTUAL_TYPES = 'SELECT * from system_virtual_schema.types'
 
     def __init__(self, connection, timeout):
         super(SchemaParserV4, self).__init__(connection, timeout)
         self.virtual_keyspaces_rows = defaultdict(list)
         self.virtual_tables_rows = defaultdict(list)
         self.virtual_columns_rows = defaultdict(lambda: defaultdict(list))
+        self.virtual_types_rows = defaultdict(list)
 
     def _query_all(self):
         cl = ConsistencyLevel.ONE
@@ -2798,7 +2800,8 @@ class SchemaParserV4(SchemaParserV3):
             # V4-only queries
             QueryMessage(query=self._SELECT_VIRTUAL_KEYSPACES, consistency_level=cl),
             QueryMessage(query=self._SELECT_VIRTUAL_TABLES, consistency_level=cl),
-            QueryMessage(query=self._SELECT_VIRTUAL_COLUMNS, consistency_level=cl)
+            QueryMessage(query=self._SELECT_VIRTUAL_COLUMNS, consistency_level=cl),
+            QueryMessage(query=self._SELECT_VIRTUAL_TYPES, consistency_level=cl)
         ]
 
         responses = self.connection.wait_for_responses(
@@ -2817,7 +2820,8 @@ class SchemaParserV4(SchemaParserV3):
             # V4-only responses
             (virtual_ks_success, virtual_ks_result),
             (virtual_table_success, virtual_table_result),
-            (virtual_column_success, virtual_column_result)
+            (virtual_column_success, virtual_column_result),
+            (virtual_type_success, virtual_type_result)
         ) = responses
 
         # copied from V3
@@ -2845,6 +2849,10 @@ class SchemaParserV4(SchemaParserV3):
             virtual_column_success, virtual_column_result,
             expected_failures=(InvalidRequest,)
         )
+        self.virtual_types_result = self._handle_results(
+            virtual_type_success, virtual_type_result,
+            expected_failures=(InvalidRequest,)
+        )
 
         self._aggregate_results()
 
@@ -2860,6 +2868,10 @@ class SchemaParserV4(SchemaParserV3):
             ks_name = row['keyspace_name']
             tab_name = row[self._table_name_col]
             m[ks_name][tab_name].append(row)
+
+        m = self.virtual_types_rows
+        for row in self.virtual_types_result:
+            m[row['keyspace_name']].append(row)
 
     def get_all_keyspaces(self):
         for x in super(SchemaParserV4, self).get_all_keyspaces():
@@ -2879,6 +2891,11 @@ class SchemaParserV4(SchemaParserV3):
                                                col_rows=col_rows,
                                                virtual=True)
                 )
+
+            for usertype_row in self.virtual_types_rows.get(keyspace_meta.name, []):
+                usertype = self._build_user_type(usertype_row)
+                keyspace_meta.user_types[usertype.name] = usertype
+
             yield keyspace_meta
 
     @staticmethod
